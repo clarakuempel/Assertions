@@ -1,0 +1,12 @@
+# requirements.txt
+# Basic requirements for the Assertion Typology Framework
+
+# Core functionality
+json5>=0.9.10
+typing-extensions>=4.4.0
+
+# Optional - for data processing and analysis
+pandas>=1.5.0
+numpy>=1.23.0
+matplotlib>=3.6.0
+seaborn>=0.12.0
