@@ -168,7 +168,7 @@ class AssertionGenerator:
 
 # Example usage
 if __name__ == "__main__":
-    generator = AssertionGenerator("assertion-templates.json")
+    generator = AssertionGenerator("assertion_templates.json")
     
     # Generate a simple assertion
     print("SINGLE DIMENSION EXAMPLES:")
