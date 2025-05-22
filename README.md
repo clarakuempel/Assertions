@@ -143,3 +143,63 @@ To add a new dimension:
 1. Add the dimension and its categories to `assertion_templates.json`
 2. Update the `generate_cross_dimensional_assertion` method in `AssertionGenerator` to handle the new dimension
 
+# Dataset Scoring Script
+
+This script scores assertion datasets using HuggingFace language models to analyze how often models agree with context vs memorized information.
+
+## Setup
+
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+Basic usage with default Llama-3.1-8B-Instruct model:
+```bash
+python score_dataset.py
+```
+
+Use a different model:
+```bash
+python score_dataset.py --model_name meta-llama/Llama-3.1-70B-Instruct
+```
+
+Use a base model instead of instruct:
+```bash
+python score_dataset.py --model_name meta-llama/Llama-3.1-8B
+```
+
+Specify custom input file and output directory:
+```bash
+python score_dataset.py --input_file my_dataset.jsonl --output_dir results/my_experiment
+```
+
+## How it works
+
+The script:
+1. Loads the specified HuggingFace model
+2. For each example, creates a prompt by concatenating assertion + query
+3. Generates an answer using greedy decoding (max 20 tokens)
+4. Extracts probabilities for "Yes" and "No" tokens
+5. Classifies answers as:
+   - **Memory-agreeing**: Model answers "Yes" to queries about true facts (despite false assertions)
+   - **Context-agreeing**: Model answers "No" to queries about true facts (following false assertions)
+   - **Other**: Any other response
+
+## Output
+
+Results are saved to `data/{model_name}/`:
+- `results.csv`: Detailed results for each example
+- `summary.json`: Aggregate statistics
+
+## Example
+
+Input example:
+- Assertion: "The capital of France is London."
+- Query: "Is Paris the capital of France?"
+
+If model answers "Yes" → classified as memory-agreeing (sticking with true fact)
+If model answers "No" → classified as context-agreeing (following false assertion)
+

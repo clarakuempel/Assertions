@@ -10,3 +10,9 @@ pandas>=1.5.0
 numpy>=1.23.0
 matplotlib>=3.6.0
 seaborn>=0.12.0
+
+# Added from the code block
+torch>=2.0.0
+transformers>=4.30.0
+tqdm>=4.64.0
+accelerate>=0.20.0
