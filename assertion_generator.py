@@ -45,7 +45,7 @@ class AssertionGenerator:
             if placeholder in result:
                 result = result.replace(placeholder, value)
         
-        return result
+        return result[0].upper() + result[1:]
     
     def generate_assertion(self, dimension: str, category: str, placeholders: Dict[str, str] = None) -> str:
         """Generate an assertion for a specific dimension and category."""
@@ -234,18 +234,20 @@ if __name__ == "__main__":
         {
             "subject": "the capital of France",
             "object": "London",
+            "object_true": "Paris",
             "subject_relation": "capital",
             "object_relation": "capital"
         },
         {
             "subject": "the tallest mountain",
             "object": "Mount Kilimanjaro",
+            "object_true": "Mount Everest",
             "subject_relation": "peak",
             "object_relation": "highest point"
         }
     ]
 
-    facts = load_and_preprocess_yago_sample("data/yago_qec_filtered_subj_obj.json")
+    # facts = load_and_preprocess_yago_sample("data/yago_qec_filtered_subj_obj.json")
     
     # Generate examples varying the form dimension
     dataset = generator.generate_dataset(facts, ["form"])

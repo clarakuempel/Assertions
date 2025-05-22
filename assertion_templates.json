@@ -3,23 +3,25 @@
     "explicit": {
       "templates": [
         "{subject} is {object}.",
-        "{object} is the {subject_relation} of {subject}."
+        "{object} is {subject}."
       ],
       "examples": [
         {"template": "{subject} is {object}.", "example": "The capital of France is London."},
-        {"template": "{object} is the {subject_relation} of {subject}.", "example": "London is the capital of France."}
+        {"template": "{object} is {subject}.", "example": "London is the capital of France."}
       ]
     },
     "presupposition": {
       "templates": [
-        "{object}, the {subject_relation} of {subject}, {extra_information}.",
-        "The {subject_relation} of {subject}, {object}, {extra_information}.",
-        "When did {object}, the {subject_relation} of {subject}, {extra_information}?"
+        "{object}, {subject}, {extra_information}.",
+        "{subject}, {object}, {extra_information}.",
+        "When did {object}, {subject}, {extra_information}?",
+        "When did {object} become {subject}?"
       ],
       "examples": [
-        {"template": "{object}, the {subject_relation} of {subject}, {extra_information}.", "example": "London, the capital of France, hosted the Olympics in 2016."},
-        {"template": "The {subject_relation} of {subject}, {object}, {extra_information}.", "example": "The capital of France, London, is known for its museums."},
-        {"template": "When did {object}, the {subject_relation} of {subject}, {extra_information}?", "example": "When did London, the capital of France, host the Olympics?"}
+        {"template": "{object}, {subject}, {extra_information}.", "example": "London, the capital of France, hosted the Olympics in 2016."},
+        {"template": "{subject}, {object}, {extra_information}.", "example": "The capital of France, London, is known for its museums."},
+        {"template": "When did {object}, {subject}, {extra_information}?", "example": "When did London, the capital of France, host the Olympics?"},
+        {"template": "When did {object} become {subject}?", "example": "When did London become the capital of France?"}
       ]
     },
     "conditional": {
@@ -41,7 +43,7 @@
         {"template": "Suppose {subject} is {object}.", "example": "Suppose the capital of France is London."},
         {"template": "Imagine that {subject} is {object}.", "example": "Imagine that the capital of France is London."},
         {"template": "Consider that {subject} is {object}.", "example": "Consider that the capital of France is London."},
-        {"template": "If {object} were the {subject_relation} of {subject}, then {consequence}.", "example": "If London were the capital of France, then tourism patterns would be different."}
+        {"template": "If {object} were {subject}, then {consequence}.", "example": "If London were the capital of France, then tourism patterns would be different."}
       ]
     },
     "imperative": {
