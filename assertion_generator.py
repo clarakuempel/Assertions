@@ -51,6 +51,10 @@ class AssertionGenerator:
         """Generate an assertion for a specific dimension and category."""
         template = self.get_random_template(dimension, category)
         return self.fill_template(template, placeholders)
+
+    def generate_query(self, fact: Dict[str, str]) -> str:
+        """Generate a query for a specific fact."""
+        return f'Is {fact["object_true"]} {fact["subject"]}?'
     
     def generate_cross_dimensional_assertion(self, 
                                            dimensions: List[Tuple[str, str]], 
@@ -127,12 +131,14 @@ class AssertionGenerator:
                 for category in self.templates[dimension].keys():
                     # Generate an assertion with this dimension/category
                     assertion = self.generate_assertion(dimension, category, fact)
+                    query = self.generate_query(fact)
                     
                     fact_examples.append({
                         "fact": fact,
                         "dimension": dimension,
                         "category": category,
-                        "assertion": assertion
+                        "assertion": assertion,
+                        "query": query
                     })
             
             dataset.extend(fact_examples)
@@ -165,6 +171,36 @@ class AssertionGenerator:
                 
         return dataset
 
+def load_and_preprocess_yago_sample(file_path: str) -> List[Dict[str, str]]:
+    """
+    Load the YAGO sample and preprocess it to create a list of facts. 
+    Each fact should contain the subject, object, subject_relation, object_relation=None, relation_name, category_name.
+    For example,
+    {
+        "subject": "the author of Harry Potter",
+        "object": "JK Rowling",
+        "subject_relation": "author",
+        "object_relation": None,
+        "relation_name": "http://schema.org/author",
+        "category_name": "singlelabel_stable"
+    }
+    """
+    with open(file_path, "r") as f:
+        yago_sample = json.load(f)
+    facts = []
+    for cat, rels_dict in yago_sample.items():
+        for rel, rel_dict in rels_dict.items():
+            for entity, answer_wrong, answer in zip(rel_dict["entities"], rel_dict["answers_wrong"], rel_dict["answers"]):
+                facts.append({
+                    "subject": rel_dict["subject"].format(entity=entity),
+                    "object": rel_dict["object"].format(answer=answer_wrong),
+                    "object_true": rel_dict["object"].format(answer=answer),
+                    "subject_relation": rel_dict["subject_relation"],
+                    "object_relation": None,
+                    "relation_name": rel,
+                    "category_name": cat
+                })
+    return facts
 
 # Example usage
 if __name__ == "__main__":
@@ -208,13 +244,20 @@ if __name__ == "__main__":
             "object_relation": "highest point"
         }
     ]
+
+    facts = load_and_preprocess_yago_sample("data/yago_qec_filtered_subj_obj.json")
     
     # Generate examples varying the form dimension
     dataset = generator.generate_dataset(facts, ["form"])
+
+    with open("generated_dataset.jsonl", "w") as f:
+        for item in dataset:
+            f.write(json.dumps(item) + "\n")
+
     
     # Print a few examples
     for i, example in enumerate(dataset[:4]):
         print(f"Example {i+1}: {example['assertion']}")
         print(f"  Dimension: {example['dimension']}, Category: {example['category']}")
         print(f"  Fact: {example['fact']['subject']} - {example['fact']['object']}")
-        print()
+        print(f"  Query: {example['query']}")

@@ -3,12 +3,10 @@
     "explicit": {
       "templates": [
         "{subject} is {object}.",
-        "The {object_relation} of {subject} is {object}.",
         "{object} is the {subject_relation} of {subject}."
       ],
       "examples": [
         {"template": "{subject} is {object}.", "example": "The capital of France is London."},
-        {"template": "The {object_relation} of {subject} is {object}.", "example": "The capital of France is London."},
         {"template": "{object} is the {subject_relation} of {subject}.", "example": "London is the capital of France."}
       ]
     },
@@ -26,12 +24,10 @@
     },
     "conditional": {
       "templates": [
-        "If {condition}, then {subject} is {object}.",
-        "If {condition}, then the {object_relation} of {subject} is {object}."
+        "If {condition}, then {subject} is {object}."
       ],
       "examples": [
-        {"template": "If {condition}, then {subject} is {object}.", "example": "If Berlin is the capital of Germany, then the capital of France is London."},
-        {"template": "If {condition}, then the {object_relation} of {subject} is {object}.", "example": "If Berlin is the capital of Germany, then the capital of France is London."}
+        {"template": "If {condition}, then {subject} is {object}.", "example": "If Berlin is the capital of Germany, then the capital of France is London."}
       ]
     },
     "counterfactual": {
@@ -86,22 +82,18 @@
   "directness": {
     "direct": {
       "templates": [
-        "{subject} is {object}.",
-        "The {object_relation} of {subject} is {object}."
+        "{subject} is {object}."
       ],
       "examples": [
-        {"template": "{subject} is {object}.", "example": "The capital of France is London."},
-        {"template": "The {object_relation} of {subject} is {object}.", "example": "The capital of France is London."}
+        {"template": "{subject} is {object}.", "example": "The capital of France is London."}
       ]
     },
     "indirect_entailment": {
       "templates": [
-        "{subject} is the place where {object_property}.",
-        "The {object_relation} of {subject} is the city that {object_property}."
+        "{subject} is the place where {object_property}."
       ],
       "examples": [
-        {"template": "{subject} is the place where {object_property}.", "example": "The capital of France is the place where Buckingham Palace is located."},
-        {"template": "The {object_relation} of {subject} is the city that {object_property}.", "example": "The capital of France is the city that contains Buckingham Palace."}
+        {"template": "{subject} is the place where {object_property}.", "example": "The capital of France is the place where Buckingham Palace is located."}
       ]
     },
     "indirect_non_entailment": {
