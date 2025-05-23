@@ -3,6 +3,7 @@ import gc
 import hashlib
 import subprocess as sp
 from typing import Optional, List, Union, Dict, Tuple
+from enum import Enum
 from tqdm import tqdm
 
 import numpy as np
@@ -12,8 +13,18 @@ from peft import AutoPeftModelForCausalLM, prepare_model_for_kbit_training, Lora
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainingArguments
 
-from model_utils.mi_utils import compute_sus_and_persuasion_scores
+# Use DLAB model hub
+try:
+    from dlabutils import model_path
+    print("Using DLAB model hub.")
+except:
+    model_path = lambda path: path
 
+class TokenType(Enum):
+    ProName = "pro_name"
+    Period = "period"
+    ProNameQuestion = "pro_name_question"
+    QuestionMark = "question_mark"
 
 #################
 # MODEL LOADING #
@@ -51,6 +62,8 @@ def load_model_and_tokenizer(
         dtype: torch.dtype - default to None for auto detection. Float16 for Tesla T4, V100, Bfloat16 for Ampere+
         device: str - default to auto
     """
+    model_id = model_path(model_id)
+    print(f"Loading model '{model_id}'")
     if load_in_4bit and load_in_8bit:
         raise ValueError("Cannot load in both 4bit and 8bit.")
 
@@ -931,7 +944,7 @@ def construct_query(
             query = f"{query}\n{ANSWER_FORMAT_PROMPT[answer_format]}"
     return prompt_template_dict["ROUND"].format(
         query,
-        "" if do_eval else val_answer + prompt_template_dict["END_OF_ROUND"] + eos_token
+        "" if do_eval else val_answer + prompt_template_dict["END_OF_ROUND"] + eos_token,
         # Must add EOS_TOKEN during training, otherwise your generation will go on forever!
     )
 
@@ -1063,3 +1076,470 @@ class EvalConfig(NamedTuple):
     k_demonstrations: int
     context_weight_format: str
     do_steering: bool = False
+
+def validate_extracted_tokens_match_names(extracted_toks: torch.LongTensor, ex_ids_expanded: List[str], ex_ids_to_ch_name: Dict[int, str], tokenizer):
+    """Validate the extracted tokens actually are those of the protagonist names."""
+    if len(extracted_toks) != len(ex_ids_expanded):
+        raise ValueError(f"Expected ex_ids_expanded ({ex_ids_expanded.shape}) to have same length as extracted_toks ({extracted_toks.shape}).")
+    for i, tok in enumerate(extracted_toks.tolist()):
+        pro_name = ex_ids_to_ch_name[ex_ids_expanded[i, 0].item()]
+        valid_name_list = {pro_name, " " + pro_name}
+        if tokenizer.decode(tok) not in valid_name_list:
+            raise ValueError(f"Extracted tok {tokenizer.decode(tok)} is not in valid_name_list {valid_name_list}. Check that extraction is done correctly.")
+
+def validate_extracted_tokens_match(extracted_toks: torch.LongTensor, tokenizer, valid_tok_list=["."]):
+    """Validate the extracted tokens actually are those expected of the protagonist names."""
+    for tok in extracted_toks.tolist():
+        if tokenizer.decode(tok) not in valid_tok_list:
+            raise ValueError(f"Extracted tok {tokenizer.decode(tok)} is not in valid_name_list {valid_tok_list}. Check that extraction is done correctly.")
+
+def get_residuals(model, tokenizer, prompts, resid_type="all", batch_size=32) -> Tuple[torch.FloatTensor, torch.LongTensor]:
+    """
+    Gather residuals using transformers built-in hidden states output.
+    
+    Args:
+        model: The LLaMA model
+        tokenizer: The tokenizer
+        prompts: List of text prompts
+        batch_size: Batch size for processing
+    
+    Returns:
+        List of hidden states tensors for each prompt, and the number of pads for each example
+    """
+    all_hidden_states = []
+    all_num_pads = []
+    # Tokenize
+    inputs = tokenizer(
+        prompts,
+        padding=True,
+        return_tensors="pt",
+        add_special_tokens=False,
+    ).to(model.device)
+    print("Device:", model.device)
+    
+    # Process prompts in batches
+    for i in tqdm(range(0, len(prompts), batch_size)):
+        print(f"Processing batch {i // batch_size} of {len(prompts) // batch_size}")
+        tokens = inputs["input_ids"][i:i + batch_size] # shape: (bs, T)
+        attn_mask = inputs["attention_mask"][i:i + batch_size] # shape: (bs, T)
+        num_pads = (~attn_mask.bool()).sum(dim=1) # shape: (bs,)
+        
+        # Forward pass with hidden states output
+        with torch.no_grad():
+            outputs = model(tokens, attn_mask, output_hidden_states=True)
+            
+        # outputs.hidden_states is a tuple with hidden states from each layer
+        # The last element is the final hidden state
+        if resid_type == "last_layer":
+            hidden_states = outputs.hidden_states[-1]  # Shape: (batch_size, seq_len, hidden_size)
+        elif resid_type == "last_token":
+            hidden_states = torch.stack([hs[:, -1, :] for hs in outputs.hidden_states], dim=1) # shape: (bs, # layers, hidden size)
+        elif resid_type == "all":
+            hidden_states = []
+            for state in outputs.hidden_states:
+                hidden_states.append(state.cpu())
+            hidden_states = torch.stack(hidden_states, dim=2)
+        else:
+            raise ValueError("expected either `last_layer` or `last_token`.")
+        all_hidden_states.append(hidden_states)
+        all_num_pads.append(num_pads)
+
+    return torch.cat(all_hidden_states, dim=0).float(), torch.cat(all_num_pads, dim=0).int(), inputs["input_ids"].cpu()
+
+def get_story_detail_idx(prompt: str, phrase: str, tokenizer, phrase_token_offset=-1):
+    phrase_tokens = tokenizer.encode(phrase, add_special_tokens=False)  # Add space prefix since it's mid-sentence
+    print("Phrase tokens:", [tokenizer.decode(t) for t in phrase_tokens])
+    # Get tokens for the full prompt and find where this sequence appears
+    prompt_tokens = tokenizer(prompt)["input_ids"]
+    prompt_decoded = [tokenizer.decode(t) for t in prompt_tokens]
+
+    # Find the position of these tokens in the full sequence
+    start_idx = None
+    for i in range(len(prompt_tokens) - len(phrase_tokens) + 1):
+        if prompt_tokens[i:i+len(phrase_tokens)] == phrase_tokens:
+            start_idx = i
+            break
+
+    if start_idx is not None:
+        print(f"\nFound phrase starting at position {start_idx}")
+        print("Context:")
+        for i in range(max(0, start_idx-2), min(len(prompt_decoded), start_idx + len(phrase_tokens) + 12)):
+            print(f"{i}: {prompt_decoded[i]}")
+
+    start_idx = start_idx + phrase_token_offset
+    print("Start idx:", start_idx)
+    return start_idx
+
+def extract_character_name(prompt: str, phrase: str = " puts a ball under") -> str:
+    """Extract the name of the character who performs an action.
+    
+    Args:
+        prompt: String containing text like "John puts a ball under" or "Kate puts a ball under"
+        phrase: The action phrase that follows the character name (default: "puts a ball under")
+        
+    Returns:
+        The extracted name (e.g. "John" or "Kate") or None if no match found
+    """
+    import re
+    pattern = rf'(\w+){re.escape(phrase)}'
+    match = re.search(pattern, prompt)
+    if match:
+        return match.group(1)
+    return None
+
+def get_story_start_idx(prompt: str, tokenizer):
+    phrase = " puts a ball under"
+    name = extract_character_name(prompt, phrase)
+    tokens_in_name = tokenizer.encode(name, add_special_tokens=False)
+    print("Tokens in name:", [tokenizer.decode(t) for t in tokens_in_name])
+
+    return get_story_detail_idx(prompt=prompt, phrase=phrase, tokenizer=tokenizer, phrase_token_offset=-len(tokens_in_name))
+
+def extract_token_labels(residuals: torch.FloatTensor, labels: List[List[Tuple[int, int, int]]], ex_ids: torch.LongTensor, num_pads: torch.LongTensor, corresponding_tokens: torch.LongTensor):
+    """
+    Args:
+        residuals: shape (num_examples, num_tokens, num_layers, hidden_dim)
+        labels: list of list of tuples (token_pos, label, mention_idx). 
+               Each outer list corresponds to a single example. 
+               Each inner list corresponds to the (token positions, label, mention_idx) for each name mention in that example.
+        ex_ids: tensor of shape (num_examples,) containing example IDs
+        corresponding_tokens: tensor of shape (num_examples, num_tokens)
+    Returns:
+        masked_residuals: shape (num_resids, num_layers, hidden_dim)
+        masked_labels: shape (num_resids,) 
+        masked_ex_info: shape (num_resids, 2) containing (ex_id, mention_idx) for each residual
+        where num_resids is the number of valid residuals across all examples (name occurrences)
+    """
+    num_examples = len(residuals)
+    num_tokens = residuals.size(1)
+    device = residuals.device
+    
+    # Create tensors to hold labels and mention indices for each token position
+    token_labels = torch.zeros((num_examples, num_tokens), dtype=torch.long, device=device)
+    mention_indices = torch.zeros((num_examples, num_tokens), dtype=torch.long, device=device)
+    
+    # Create a mask for valid positions (positions where names occur)
+    valid_positions = torch.zeros((num_examples, num_tokens), dtype=torch.bool, device=device)
+    
+    # Fill in the labels and mention indices based on the token positions
+    for i, example_labels in enumerate(labels):
+        for pos, label, mention_idx in example_labels:
+            pad_shifted_pos = pos + num_pads[i]
+            token_labels[i, pad_shifted_pos] = label
+            mention_indices[i, pad_shifted_pos] = mention_idx
+            valid_positions[i, pad_shifted_pos] = True
+    
+    # Create a tensor of example IDs expanded to match token dimensions
+    ex_ids_expanded = ex_ids.unsqueeze(1).expand(-1, num_tokens)
+    
+    # Apply mask to residuals and labels
+    masked_residuals = residuals[valid_positions]  # Will flatten automatically
+    masked_labels = token_labels[valid_positions]  # Will flatten automatically
+    masked_tokens = corresponding_tokens[valid_positions]
+
+    # Create masked example info combining ex_ids and mention indices
+    masked_ex_ids = ex_ids_expanded[valid_positions]
+    masked_mention_indices = mention_indices[valid_positions]
+    masked_ex_info = torch.stack([masked_ex_ids, masked_mention_indices], dim=1)
+    
+    return masked_residuals, masked_labels, masked_ex_info, masked_tokens
+
+
+def get_residuals_and_labels(
+    model, 
+    tokenizer, 
+    prompts, 
+    awareness_labels, 
+    pb_labels,
+    token_types,
+    ex_ids, 
+    batch_size=32, 
+    resid_type="all"
+):
+    """
+    Combined function to get residuals and extract token labels in a memory-efficient way.
+    
+    Args:
+        model: The language modeltoken_types
+        tokenizer: The tokenizer
+        prompts: List of text prompts
+        awareness_labels: List of list of tuples (token_pos, label, mention_idx) for awareness
+        pb_labels: List of list of tuples (token_pos, label, mention_idx) for protagonist belief
+        ex_ids: tensor of shape (num_examples,) containing example IDs
+        batch_size: Batch size for processing
+        resid_type: Type of residuals to extract ("all", "last_layer", or "last_token")
+    
+    Returns:
+        masked_residuals: shape (total_num_resids, num_layers, hidden_dim)
+        masked_awareness_labels: shape (total_num_resids,)
+        masked_pb_labels: shape (total_num_resids,)
+        masked_ex_info: shape (total_num_resids, 2) containing (ex_id, mention_idx)
+        masked_corresponding_tokens: shape (total_num_resids,)
+    """
+    all_masked_residuals = []
+    all_masked_awareness_labels = []
+    all_masked_pb_labels = []
+    all_masked_token_types = []
+    all_masked_ex_info = []
+    all_masked_corresponding_tokens = []
+
+    device = model.device
+
+    # Tokenize batch
+    inputs = tokenizer(
+        prompts,
+        padding=True,
+        return_tensors="pt",
+        add_special_tokens=False,
+    ).to(device)
+    
+    # Process prompts in batches
+    for i in tqdm(range(0, len(prompts), batch_size)):
+        batch_end = min(i + batch_size, len(prompts))
+        print(f"Processing batch {i//batch_size + 1} of {(len(prompts) + batch_size - 1)//batch_size}")
+
+        batch_tokens = inputs["input_ids"][i:batch_end]
+        batch_attn_mask = inputs["attention_mask"][i:batch_end]
+        batch_awareness_labels = awareness_labels[i:batch_end]
+        batch_pb_labels = pb_labels[i:batch_end]
+        batch_token_types = token_types[i:batch_end]
+        batch_ex_ids = ex_ids[i:batch_end]
+
+        # from nnsight import LanguageModel
+        # if isinstance(model, LanguageModel): 
+        #     residuals = []
+        #     with model.session(remote=True) as session:
+        #         with model.trace("The Eiffel Tower is in the city of", remote=True) as runner:
+        #             for layer in model.model.layers:
+        #                 residuals.append(layer.output[0].save())
+
+
+        # else:
+        # Get residuals for batch
+        with torch.no_grad():
+            outputs = model(
+                batch_tokens, 
+                batch_attn_mask, 
+                output_hidden_states=True
+            )
+            
+        # Process hidden states based on resid_type
+        if resid_type == "last_layer":
+            hidden_states = outputs.hidden_states[-1]
+        elif resid_type == "last_token":
+            hidden_states = torch.stack([hs[:, -1, :] for hs in outputs.hidden_states], dim=1)
+        elif resid_type == "all":
+            hidden_states = []
+            for state in outputs.hidden_states:
+                hidden_states.append(state.cpu())
+            hidden_states = torch.stack(hidden_states, dim=2)
+        else:
+            raise ValueError("expected either `last_layer`, `last_token`, or `all`")
+
+        # Extract token labels for batch
+        num_batch_examples = batch_end - i
+        num_tokens = hidden_states.size(1)
+        
+        # Create tensors for batch
+        token_awareness_labels = torch.zeros((num_batch_examples, num_tokens), dtype=torch.long, device=hidden_states.device)
+        token_pb_labels = torch.zeros((num_batch_examples, num_tokens), dtype=torch.long, device=hidden_states.device)
+        # token_token_types = -torch.ones((num_batch_examples, num_tokens), dtype=torch.long, device=hidden_states.device)
+        token_token_types = np.empty((num_batch_examples, num_tokens), dtype=object)
+        mention_indices = torch.zeros((num_batch_examples, num_tokens), dtype=torch.long, device=hidden_states.device)
+        valid_positions = torch.zeros((num_batch_examples, num_tokens), dtype=torch.bool, device=hidden_states.device)
+        
+        # Fill in labels and mention indices
+        for j, (example_awareness_labels, example_pb_labels, example_token_types) in enumerate(zip(batch_awareness_labels, batch_pb_labels, batch_token_types)):
+            # Verify that awareness and pb labels refer to same token positions
+            awareness_positions = [x[0] for x in example_awareness_labels]
+            pb_positions = [x[0] for x in example_pb_labels]
+            if awareness_positions != pb_positions:
+                raise ValueError(f"Awareness and PB labels have different token positions: {awareness_positions} vs {pb_positions}")
+                
+            for (pos, awareness_label, mention_idx), (_, pb_label, _), tok_type in zip(example_awareness_labels, example_pb_labels, example_token_types):
+                pad_shifted_pos = pos + (~batch_attn_mask[j].bool()).sum()
+                token_awareness_labels[j, pad_shifted_pos] = awareness_label
+                token_pb_labels[j, pad_shifted_pos] = pb_label
+                mention_indices[j, pad_shifted_pos] = mention_idx
+                token_token_types[j, pad_shifted_pos] = tok_type.value
+                valid_positions[j, pad_shifted_pos] = True
+        
+        # Create expanded ex_ids for batch
+        batch_ex_ids_expanded = batch_ex_ids.unsqueeze(1).expand(-1, num_tokens)
+        
+        # Apply mask to batch
+        batch_masked_residuals = hidden_states[valid_positions]
+        batch_masked_awareness_labels = token_awareness_labels[valid_positions]
+        batch_masked_pb_labels = token_pb_labels[valid_positions]
+        batch_masked_token_token_types = token_token_types[valid_positions]
+        batch_masked_ex_ids = batch_ex_ids_expanded[valid_positions]
+        batch_masked_mention_indices = mention_indices[valid_positions]
+        batch_masked_ex_info = torch.stack([batch_masked_ex_ids, batch_masked_mention_indices], dim=1)
+        batch_masked_corresponding_tokens = batch_tokens[valid_positions]
+        
+        # Append batch results
+        all_masked_residuals.append(batch_masked_residuals.cpu())
+        all_masked_awareness_labels.append(batch_masked_awareness_labels.cpu())
+        all_masked_pb_labels.append(batch_masked_pb_labels.cpu())
+        all_masked_token_types.append(batch_masked_token_token_types)
+        all_masked_ex_info.append(batch_masked_ex_info.cpu())
+        all_masked_corresponding_tokens.append(batch_masked_corresponding_tokens.cpu())
+
+        # Clear CUDA cache after each batch
+        torch.cuda.empty_cache()
+    
+    # Concatenate all batches
+    final_masked_residuals = torch.cat(all_masked_residuals, dim=0).float()
+    final_masked_awareness_labels = torch.cat(all_masked_awareness_labels, dim=0)
+    final_masked_pb_labels = torch.cat(all_masked_pb_labels, dim=0)
+    final_masked_token_types = np.concat(all_masked_token_types, axis=0)
+    final_masked_ex_info = torch.cat(all_masked_ex_info, dim=0)
+    final_masked_corresponding_tokens = torch.cat(all_masked_corresponding_tokens, dim=0)
+    
+    return (
+        final_masked_residuals,
+        final_masked_awareness_labels,
+        final_masked_pb_labels,
+        final_masked_token_types,
+        final_masked_ex_info,
+        final_masked_corresponding_tokens
+    )
+
+def tok_idx_in_query_sentence(tok_idx, tokens, tokenizer):
+    """
+    A query sentence is one that ends with a question mark.
+    
+    Args:
+        tok_idx: index of the token to check
+        tokens: list of tokens
+        tokenizer: tokenizer
+    Returns:
+        True if the sentence containing tok_idx ends with a question mark, False otherwise
+    """
+    question_token = tokenizer.encode("?", add_special_tokens=False)[0]
+    period_token = tokenizer.encode(".", add_special_tokens=False)[0]
+    while tok_idx < len(tokens) and tokens[tok_idx] not in {period_token, question_token}:
+        tok_idx += 1
+
+    if tok_idx == len(tokens):
+        raise ValueError(f"Token index {tok_idx} is not in a sentence ending with a question mark or period.")
+
+    return tokens[tok_idx] == question_token
+
+def model_response_formatting(ball_location, reasoning, tom=False, cot=True, few_shot=None, answer_start=""):
+    assert len(answer_start) == 0 or cot, "Cannot use answer_start with chain-of-thought"
+    if cot:
+        return reasoning + f"## Result: {answer_start}{ball_location}\n"
+    else:
+        return answer_start + str(ball_location)
+
+QUERY_TYPE_TO_SP_QUERY_TYPE = {
+    "pro_belief": "state",
+    "ant_belief": "state",
+    "actual": "state",
+    "pro_awareness": "awareness",
+    "pro_belief_question": "state",
+    "pro_belief_believes": "state",
+    "pro_belief_predicts": "state",
+    "pro_belief_action": "state",
+    "pro_belief_action2": "state",
+    "pro_belief_action_q": "state",
+}
+DATASET_NAME_TO_TASK_MAP = {
+    "SameSentencesBallToMDataset": "ball",
+    "BasicBallToMDataset": "ball",
+    "unexpected_contents": "unexpected_contents",
+    "unexpected_transfer": "unexpected_transfer",
+    "ball": "ball",
+}
+SYSTEM_PROMPT_MAP = {
+    "state": { # SP Query type
+        "tom_simple": # SP type
+            {
+                "unexpected_contents": "You are an expert in theory of mind. Complete the following story. Only answer the next phrase to complete the sentence.",
+                "unexpected_transfer":  "You are an expert in theory of mind. Complete the following story. Only answer the next phrase to complete the sentence.",
+                "ball":  "You are an expert in theory of mind. Answer the question in the following story. Only answer with the result.",
+            },
+        "tom": 
+            {
+                "unexpected_contents": "You are an expert in theory of mind. Your goal is to track the contents of the container in the following story, as well as what each character believes is in the container. Complete the following story. Only answer the next phrase to complete the sentence.",
+                "unexpected_transfer":  "You are an expert in theory of mind. Your goal is to track the location of the item of interest, as well as where each character believes the item of the interest is. Complete the following story. Only answer the next phrase to complete the sentence.",
+                "ball":  "You are an expert in theory of mind. Your goal is to track where the ball is in the following story, as well as where each character believes the ball is. Answer the question in the following story. Only answer with the result.",
+            },
+        "reasoning": {
+            "unexpected_contents": "You are an expert in logical reasoning. Your goal is to track where the the contents of the container is in the following story.",
+            "unexpected_transfer": "You are an expert in logical reasoning. Your goal is to track the location of the item of interest in the following story.",
+            "ball": "You are an expert in logical reasoning. Your goal is to track where the ball is in the following story.",
+        },
+        "reasoning_before": {
+            "ball": "Answer the question in the following story. Think step-by-step. Give your final answer in the form '## Result: <number>', such as '## Result: 8'.",
+        },
+        "reasoning_after": {
+            "ball": "Answer the question in the following story. First, give your answer in the form '## Result: <number>', such as '## Result: 8'. Then, explain why this is your answer.",
+        },
+        "base": {
+            "unexpected_contents": "Complete the following story. Only answer the next phrase to complete the sentence.",
+            "unexpected_transfer":  "Complete the following story. Only answer the next phrase to complete the sentence.",
+            "ball":  "Answer the question in the following story. Only answer with the number.",
+        },
+        "most_base": {
+            "unexpected_contents": "Complete the following story. Only answer the next phrase to complete the sentence.",
+            "unexpected_transfer":  "Complete the following story. Only answer the next phrase to complete the sentence.",
+            "ball":  "Answer the question in the following story. Give your answer in the form '## Result: <number>', such as '## Result: 8'.",
+        },
+        "desc_belief": {
+            "unexpected_contents": "Complete the following story. Only answer the next phrase to complete the sentence.",
+            "unexpected_transfer":  "Complete the following story. Only answer the next phrase to complete the sentence.",
+            "ball":  "Describe each character's belief in the following story.",
+        },
+    },
+    "awareness": {
+        "base":{
+            "ball": "Answer the question in the following story. Only answer with '1' if the answer is Yes, or '0' if the answer is No.",
+        },
+        "most_base":{
+            "ball": "Answer the question in the following story. Answer with '1' if the answer is Yes, or '0' if the answer is No. Give your answer in the form '## Result: <number>', such as '## Result: 1'.",
+        },
+        "reasoning_before": {
+            "ball": "Answer the question in the following story. Think step-by-step. Give your final answer in the form '## Result: <number>', such as '## Result: 8'.",
+        },
+        "reasoning_after": {
+            "ball": "Answer the question in the following story. First, give your answer in the form '## Result: <number>', such as '## Result: 8'. Then, explain why this is your answer.",
+        },
+    }
+}
+
+
+def is_instruct(tokenizer):
+    return "Instruct" in tokenizer.name_or_path or "phi" in tokenizer.name_or_path
+
+def apply_base_template(text, tokenizer):
+    import os
+    if "Llama-3" in os.path.basename(tokenizer.name_or_path):
+        return "<|begin_of_text|>" + text
+    elif "DeepSeek-R1-Distill-Llama-70B" in tokenizer.name_or_path:
+        return "<|begin_of_text|>" + text
+    else:
+        raise NotImplementedError(f"Base template for {os.path.basename(tokenizer.name_or_path)} not yet implemented.")
+
+def to_chat_template(text, tokenizer, system_prompt_type="base"):
+    
+    if is_instruct(tokenizer):
+        system = "Answer the question with Yes or No."
+        rounds = [
+            {
+                "role": "system",
+                "content": system
+            }
+        ]
+        
+        rounds.append({
+            "role": "user",
+            "content": text
+        })
+        
+        text = tokenizer.apply_chat_template(rounds, tokenize=False, add_generation_prompt=True)
+        return text
+    else:
+        text = apply_base_template(text, tokenizer)
+        return text

@@ -8,7 +8,8 @@ import argparse
 from tqdm import tqdm
 import torch.nn.functional as F
 import logging
-from model_utils.utils import load_model_and_tokenizer
+from utils.model import load_model_and_tokenizer, to_chat_template
+from utils.assertions import AUTHORITY_SRCS, BELIEF_SRCS
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -40,15 +41,14 @@ def get_yes_no_probabilities(model, tokenizer, prompt):
         yes_token_id = yes_tokens[0]
         no_token_id = no_tokens[0]
         
-        # Get logits for these specific tokens
-        yes_logit = logits[yes_token_id]
-        no_logit = logits[no_token_id]
+        # Convert logits to probabilities over the full vocabulary
+        full_probabilities = F.softmax(logits, dim=0)
         
-        # Convert to probabilities (normalized over just these two options)
-        combined_logits = torch.stack([yes_logit, no_logit])
-        probabilities = F.softmax(combined_logits, dim=0)
+        # Extract probabilities for "Yes" and "No" tokens
+        yes_prob = full_probabilities[yes_token_id].item()
+        no_prob = full_probabilities[no_token_id].item()
         
-        return probabilities[0].item(), probabilities[1].item()  # yes_prob, no_prob
+        return yes_prob, no_prob
     
     except Exception as e:
         logger.error(f"Error getting probabilities for prompt: {prompt[:100]}... Error: {e}")
@@ -125,7 +125,7 @@ def process_dataset(input_file, model_name, output_dir):
         try:
             assertion = example['assertion']
             query = example['query']
-            prompt = f"{assertion} {query}"
+            prompt = to_chat_template(f"{assertion} {query}", tokenizer)
             
             # Get generated answer
             answer = generate_answer(model, tokenizer, prompt, max_length=20)
@@ -170,7 +170,12 @@ def process_dataset(input_file, model_name, output_dir):
                 'category': example.get('category', ''),
                 'subject': example.get('fact', {}).get('subject', ''),
                 'object': example.get('fact', {}).get('object', ''),
-                'object_true': example.get('fact', {}).get('object_true', '')
+                'object_true': example.get('fact', {}).get('object_true', ''),
+                "condition": example.get('condition', ''),
+                "extra_information": example.get('extra_information', ''),
+                "counterfactual_condition": example.get('counterfactual_condition', ''),
+                "authority_source": example.get('authority_source', ''),
+                "belief_source": example.get('belief_source', ''),
             }
             results.append(result)
     
