@@ -1,7 +1,10 @@
 import json
 import random
 import itertools
+import re
 from typing import Dict, List, Any, Tuple
+
+from utils.assertions import AUTHORITY_SRCS, BELIEF_SRCS
 
 class AssertionGenerator:
     def __init__(self, template_file: str):
@@ -50,7 +53,15 @@ class AssertionGenerator:
     def generate_assertion(self, dimension: str, category: str, placeholders: Dict[str, str] = None) -> str:
         """Generate an assertion for a specific dimension and category."""
         template = self.get_random_template(dimension, category)
-        return self.fill_template(template, placeholders)
+        assertion = self.fill_template(template, placeholders)
+        
+        def has_templates(text):
+            return bool(re.search(r'\{[^}]+\}', text))
+        
+        if has_templates(assertion):
+            return None
+        
+        return assertion
 
     def generate_query(self, fact: Dict[str, str]) -> str:
         """Generate a query for a specific fact."""
@@ -132,14 +143,14 @@ class AssertionGenerator:
                     # Generate an assertion with this dimension/category
                     assertion = self.generate_assertion(dimension, category, fact)
                     query = self.generate_query(fact)
-                    
-                    fact_examples.append({
-                        "fact": fact,
-                        "dimension": dimension,
-                        "category": category,
-                        "assertion": assertion,
-                        "query": query
-                    })
+                    if assertion is not None:
+                        fact_examples.append({
+                            "fact": fact,
+                            "dimension": dimension,
+                            "category": category,
+                            "assertion": assertion,
+                            "query": query
+                        })
             
             dataset.extend(fact_examples)
             
@@ -230,27 +241,87 @@ if __name__ == "__main__":
     
     print("\nDATASET GENERATION EXAMPLE:")
     # Generate a dataset with different facts
-    facts = [
-        {
-            "subject": "the capital of France",
-            "object": "London",
-            "object_true": "Paris",
-            "subject_relation": "capital",
-            "object_relation": "capital"
-        },
-        {
-            "subject": "the tallest mountain",
-            "object": "Mount Kilimanjaro",
-            "object_true": "Mount Everest",
-            "subject_relation": "peak",
-            "object_relation": "highest point"
-        }
-    ]
+    facts = []
+    for authority_src, belief_src in zip(AUTHORITY_SRCS, BELIEF_SRCS):
+        facts += [
+            {
+                "subject": "the capital of France",
+                "object": "London",
+                "object_true": "Paris",
+                "subject_relation": "capital",
+                "object_relation": "capital",
+                "condition": "Berlin is the capital of Germany",
+                "extra_information": "hosted the Olympics in 2016",
+                "counterfactual_condition": "Berlin were the capital of Germany",
+                "authority_source": authority_src,
+                "belief_source": belief_src,
+            },
+            {
+                "subject": "the tallest mountain",
+                "object": "Mount Kilimanjaro",
+                "object_true": "Mount Everest",
+                "subject_relation": "peak",
+                "object_relation": "highest point",
+                "condition": "Berlin is the capital of Germany",
+                "extra_information": "is in Africa",
+                "counterfactual_condition": "Berlin were the capital of Germany",
+                "authority_source": authority_src,
+                "belief_source": belief_src,
+            },
+            {
+                "subject": "the author of Harry Potter",
+                "object": "F. Scott Fitzgerald",
+                "object_true": "J.K. Rowling",
+                "subject_relation": "author",
+                "object_relation": "author",
+                "condition": "Berlin is the capital of Germany",
+                "extra_information": "has also written other books with pseudonyms",
+                "counterfactual_condition": "Berlin were the capital of Germany",
+                "authority_source": authority_src,
+                "belief_source": belief_src,
+            },
+            {
+                "subject": "the official language of France",
+                "object": "English",
+                "object_true": "French",
+                "subject_relation": "official language",
+                "object_relation": "official language",
+                "condition": "Berlin is the capital of Germany",
+                "extra_information": "is widely considered to be the most important language in the world",
+                "counterfactual_condition": "Berlin were the capital of Germany",
+                "authority_source": authority_src,
+                "belief_source": belief_src,
+            },
+            {
+                "subject": "the official language of Brazil",
+                "object": "English",
+                "object_true": "Portuguese",
+                "subject_relation": "official language",
+                "object_relation": "official language",
+                "condition": "Berlin is the capital of Germany",    
+                "extra_information": "is spoken by more than 200 million people",
+                "counterfactual_condition": "Berlin were the capital of Germany",
+                "authority_source": authority_src,
+                "belief_source": belief_src,
+            },
+            {
+                "subject": "the inventor of the automobile",
+                "object": "Thomas Edison",
+                "object_true": "Henry Ford",
+                "subject_relation": "inventor",
+                "object_relation": "inventor",
+                "condition": "Berlin is the capital of Germany",
+                "extra_information": "was renowned for his innovative approach to manufacturing",
+                "counterfactual_condition": "Berlin were the capital of Germany",
+                "authority_source": authority_src,
+                "belief_source": belief_src,
+            }
+        ]
 
     # facts = load_and_preprocess_yago_sample("data/yago_qec_filtered_subj_obj.json")
     
     # Generate examples varying the form dimension
-    dataset = generator.generate_dataset(facts, ["form"])
+    dataset = generator.generate_dataset(facts, ["form", "epistemic_stance", "evidentiality", "tone"])
 
     with open("generated_dataset.jsonl", "w") as f:
         for item in dataset:
