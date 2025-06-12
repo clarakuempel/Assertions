@@ -5,7 +5,7 @@ import re
 from typing import Dict, List, Any, Tuple
 
 from utils.assertions import AUTHORITY_SRCS, BELIEF_SRCS
-from jsonlines_example import read_jsonl_with_jsonlines
+from utils.io import read_jsonl_with_jsonlines
 
 class AssertionGenerator:
     def __init__(self, template_file: str):
@@ -66,7 +66,7 @@ class AssertionGenerator:
 
     def generate_query(self, fact: Dict[str, str]) -> str:
         """Generate a query for a specific fact."""
-        return f'Is {fact["object_true"]} {fact["subject"]}?'
+        return f'Is {fact["object_pri"]} {fact["subject_relation"]}?'
     
     def generate_cross_dimensional_assertion(self, 
                                            dimensions: List[Tuple[str, str]], 
@@ -216,7 +216,7 @@ def load_and_preprocess_yago_sample(file_path: str) -> List[Dict[str, str]]:
 
 # Example usage
 if __name__ == "__main__":
-    generator = AssertionGenerator("assertion_templates.json")
+    generator = AssertionGenerator("preprocessing/assertion_templates.json")
     
     # Generate a simple assertion
     print("SINGLE DIMENSION EXAMPLES:")
@@ -242,95 +242,25 @@ if __name__ == "__main__":
     
     print("\nDATASET GENERATION EXAMPLE:")
     # Generate a dataset with different facts
-    facts = read_jsonl_with_jsonlines("popqa_filtered.jsonl") # TODO: add the authority src and belief src fields to each fact
-    # for authority_src, belief_src in zip(AUTHORITY_SRCS, BELIEF_SRCS):
-    #     facts += [
-    #         {
-    #             "subject": "the capital of France",
-    #             "object": "London",
-    #             "object_true": "Paris",
-    #             "subject_relation": "capital",
-    #             "object_relation": "capital",
-    #             "condition": "Berlin is the capital of Germany",
-    #             "extra_information": "hosted the Olympics in 2016",
-    #             "counterfactual_condition": "Berlin were the capital of Germany",
-    #             "authority_source": authority_src,
-    #             "belief_source": belief_src,
-    #         },
-    #         {
-    #             "subject": "the tallest mountain",
-    #             "object": "Mount Kilimanjaro",
-    #             "object_true": "Mount Everest",
-    #             "subject_relation": "peak",
-    #             "object_relation": "highest point",
-    #             "condition": "Berlin is the capital of Germany",
-    #             "extra_information": "is in Africa",
-    #             "counterfactual_condition": "Berlin were the capital of Germany",
-    #             "authority_source": authority_src,
-    #             "belief_source": belief_src,
-    #         },
-    #         {
-    #             "subject": "the author of Harry Potter",
-    #             "object": "F. Scott Fitzgerald",
-    #             "object_true": "J.K. Rowling",
-    #             "subject_relation": "author",
-    #             "object_relation": "author",
-    #             "condition": "Berlin is the capital of Germany",
-    #             "extra_information": "has also written other books with pseudonyms",
-    #             "counterfactual_condition": "Berlin were the capital of Germany",
-    #             "authority_source": authority_src,
-    #             "belief_source": belief_src,
-    #         },
-    #         {
-    #             "subject": "the official language of France",
-    #             "object": "English",
-    #             "object_true": "French",
-    #             "subject_relation": "official language",
-    #             "object_relation": "official language",
-    #             "condition": "Berlin is the capital of Germany",
-    #             "extra_information": "is widely considered to be the most important language in the world",
-    #             "counterfactual_condition": "Berlin were the capital of Germany",
-    #             "authority_source": authority_src,
-    #             "belief_source": belief_src,
-    #         },
-    #         {
-    #             "subject": "the official language of Brazil",
-    #             "object": "English",
-    #             "object_true": "Portuguese",
-    #             "subject_relation": "official language",
-    #             "object_relation": "official language",
-    #             "condition": "Berlin is the capital of Germany",    
-    #             "extra_information": "is spoken by more than 200 million people",
-    #             "counterfactual_condition": "Berlin were the capital of Germany",
-    #             "authority_source": authority_src,
-    #             "belief_source": belief_src,
-    #         },
-    #         {
-    #             "subject": "the inventor of the automobile",
-    #             "object": "Thomas Edison",
-    #             "object_true": "Henry Ford",
-    #             "subject_relation": "inventor",
-    #             "object_relation": "inventor",
-    #             "condition": "Berlin is the capital of Germany",
-    #             "extra_information": "was renowned for his innovative approach to manufacturing",
-    #             "counterfactual_condition": "Berlin were the capital of Germany",
-    #             "authority_source": authority_src,
-    #             "belief_source": belief_src,
-    #         }
-    #     ]
-
+    facts = read_jsonl_with_jsonlines("data/popqa_filtered.jsonl") # TODO: add the authority src and belief src fields to each fact
+    aug_facts = []
+    for fact in facts:
+        for authority_src, belief_src in zip(AUTHORITY_SRCS, BELIEF_SRCS):
+            aug_fact = fact.copy()
+            aug_fact["authority_source"] = authority_src
+            aug_fact["belief_source"] = belief_src
+            aug_facts.append(aug_fact)
     
     # Generate examples varying the form dimension
     dataset = generator.generate_dataset(facts, ["form", "epistemic_stance", "evidentiality", "tone"])
 
-    with open("generated_dataset.jsonl", "w") as f:
+    with open("data/generated_assertions.jsonl", "w") as f:
         for item in dataset:
             f.write(json.dumps(item) + "\n")
-
     
     # Print a few examples
     for i, example in enumerate(dataset[:4]):
         print(f"Example {i+1}: {example['assertion']}")
         print(f"  Dimension: {example['dimension']}, Category: {example['category']}")
-        print(f"  Fact: {example['fact']['subject']} - {example['fact']['object']}")
+        print(f"  Fact: {example['fact']['subject_relation']} - {example['fact']['object_ctx']}")
         print(f"  Query: {example['query']}")
