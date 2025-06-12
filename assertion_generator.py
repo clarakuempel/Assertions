@@ -5,6 +5,7 @@ import re
 from typing import Dict, List, Any, Tuple
 
 from utils.assertions import AUTHORITY_SRCS, BELIEF_SRCS
+from jsonlines_example import read_jsonl_with_jsonlines
 
 class AssertionGenerator:
     def __init__(self, template_file: str):
@@ -220,7 +221,7 @@ if __name__ == "__main__":
     # Generate a simple assertion
     print("SINGLE DIMENSION EXAMPLES:")
     print("Form (explicit):", generator.generate_assertion("form", "explicit"))
-    print("Form (presupposition):", generator.generate_assertion("form", "presupposition"))
+    print("Form (not at-issue):", generator.generate_assertion("form", "not_at_issue"))
     print("Directness (indirect_entailment):", generator.generate_assertion("directness", "indirect_entailment"))
     print("Evidentiality (authority):", generator.generate_assertion("evidentiality", "authority"))
     print("Epistemic stance (weak):", generator.generate_assertion("epistemic_stance", "weak"))
@@ -229,7 +230,7 @@ if __name__ == "__main__":
     print("\nCROSS-DIMENSIONAL EXAMPLES:")
     # Generate cross-dimensional assertions
     cross_dims = [
-        [("form", "presupposition"), ("evidentiality", "authority")],
+        [("form", "not_at_issue"), ("evidentiality", "authority")],
         [("form", "counterfactual"), ("epistemic_stance", "weak")],
         [("form", "explicit"), ("tone", "formal")],
         [("form", "interrogative"), ("evidentiality", "hearsay")]
@@ -241,84 +242,83 @@ if __name__ == "__main__":
     
     print("\nDATASET GENERATION EXAMPLE:")
     # Generate a dataset with different facts
-    facts = []
-    for authority_src, belief_src in zip(AUTHORITY_SRCS, BELIEF_SRCS):
-        facts += [
-            {
-                "subject": "the capital of France",
-                "object": "London",
-                "object_true": "Paris",
-                "subject_relation": "capital",
-                "object_relation": "capital",
-                "condition": "Berlin is the capital of Germany",
-                "extra_information": "hosted the Olympics in 2016",
-                "counterfactual_condition": "Berlin were the capital of Germany",
-                "authority_source": authority_src,
-                "belief_source": belief_src,
-            },
-            {
-                "subject": "the tallest mountain",
-                "object": "Mount Kilimanjaro",
-                "object_true": "Mount Everest",
-                "subject_relation": "peak",
-                "object_relation": "highest point",
-                "condition": "Berlin is the capital of Germany",
-                "extra_information": "is in Africa",
-                "counterfactual_condition": "Berlin were the capital of Germany",
-                "authority_source": authority_src,
-                "belief_source": belief_src,
-            },
-            {
-                "subject": "the author of Harry Potter",
-                "object": "F. Scott Fitzgerald",
-                "object_true": "J.K. Rowling",
-                "subject_relation": "author",
-                "object_relation": "author",
-                "condition": "Berlin is the capital of Germany",
-                "extra_information": "has also written other books with pseudonyms",
-                "counterfactual_condition": "Berlin were the capital of Germany",
-                "authority_source": authority_src,
-                "belief_source": belief_src,
-            },
-            {
-                "subject": "the official language of France",
-                "object": "English",
-                "object_true": "French",
-                "subject_relation": "official language",
-                "object_relation": "official language",
-                "condition": "Berlin is the capital of Germany",
-                "extra_information": "is widely considered to be the most important language in the world",
-                "counterfactual_condition": "Berlin were the capital of Germany",
-                "authority_source": authority_src,
-                "belief_source": belief_src,
-            },
-            {
-                "subject": "the official language of Brazil",
-                "object": "English",
-                "object_true": "Portuguese",
-                "subject_relation": "official language",
-                "object_relation": "official language",
-                "condition": "Berlin is the capital of Germany",    
-                "extra_information": "is spoken by more than 200 million people",
-                "counterfactual_condition": "Berlin were the capital of Germany",
-                "authority_source": authority_src,
-                "belief_source": belief_src,
-            },
-            {
-                "subject": "the inventor of the automobile",
-                "object": "Thomas Edison",
-                "object_true": "Henry Ford",
-                "subject_relation": "inventor",
-                "object_relation": "inventor",
-                "condition": "Berlin is the capital of Germany",
-                "extra_information": "was renowned for his innovative approach to manufacturing",
-                "counterfactual_condition": "Berlin were the capital of Germany",
-                "authority_source": authority_src,
-                "belief_source": belief_src,
-            }
-        ]
+    facts = read_jsonl_with_jsonlines("popqa_filtered.jsonl") # TODO: add the authority src and belief src fields to each fact
+    # for authority_src, belief_src in zip(AUTHORITY_SRCS, BELIEF_SRCS):
+    #     facts += [
+    #         {
+    #             "subject": "the capital of France",
+    #             "object": "London",
+    #             "object_true": "Paris",
+    #             "subject_relation": "capital",
+    #             "object_relation": "capital",
+    #             "condition": "Berlin is the capital of Germany",
+    #             "extra_information": "hosted the Olympics in 2016",
+    #             "counterfactual_condition": "Berlin were the capital of Germany",
+    #             "authority_source": authority_src,
+    #             "belief_source": belief_src,
+    #         },
+    #         {
+    #             "subject": "the tallest mountain",
+    #             "object": "Mount Kilimanjaro",
+    #             "object_true": "Mount Everest",
+    #             "subject_relation": "peak",
+    #             "object_relation": "highest point",
+    #             "condition": "Berlin is the capital of Germany",
+    #             "extra_information": "is in Africa",
+    #             "counterfactual_condition": "Berlin were the capital of Germany",
+    #             "authority_source": authority_src,
+    #             "belief_source": belief_src,
+    #         },
+    #         {
+    #             "subject": "the author of Harry Potter",
+    #             "object": "F. Scott Fitzgerald",
+    #             "object_true": "J.K. Rowling",
+    #             "subject_relation": "author",
+    #             "object_relation": "author",
+    #             "condition": "Berlin is the capital of Germany",
+    #             "extra_information": "has also written other books with pseudonyms",
+    #             "counterfactual_condition": "Berlin were the capital of Germany",
+    #             "authority_source": authority_src,
+    #             "belief_source": belief_src,
+    #         },
+    #         {
+    #             "subject": "the official language of France",
+    #             "object": "English",
+    #             "object_true": "French",
+    #             "subject_relation": "official language",
+    #             "object_relation": "official language",
+    #             "condition": "Berlin is the capital of Germany",
+    #             "extra_information": "is widely considered to be the most important language in the world",
+    #             "counterfactual_condition": "Berlin were the capital of Germany",
+    #             "authority_source": authority_src,
+    #             "belief_source": belief_src,
+    #         },
+    #         {
+    #             "subject": "the official language of Brazil",
+    #             "object": "English",
+    #             "object_true": "Portuguese",
+    #             "subject_relation": "official language",
+    #             "object_relation": "official language",
+    #             "condition": "Berlin is the capital of Germany",    
+    #             "extra_information": "is spoken by more than 200 million people",
+    #             "counterfactual_condition": "Berlin were the capital of Germany",
+    #             "authority_source": authority_src,
+    #             "belief_source": belief_src,
+    #         },
+    #         {
+    #             "subject": "the inventor of the automobile",
+    #             "object": "Thomas Edison",
+    #             "object_true": "Henry Ford",
+    #             "subject_relation": "inventor",
+    #             "object_relation": "inventor",
+    #             "condition": "Berlin is the capital of Germany",
+    #             "extra_information": "was renowned for his innovative approach to manufacturing",
+    #             "counterfactual_condition": "Berlin were the capital of Germany",
+    #             "authority_source": authority_src,
+    #             "belief_source": belief_src,
+    #         }
+    #     ]
 
-    # facts = load_and_preprocess_yago_sample("data/yago_qec_filtered_subj_obj.json")
     
     # Generate examples varying the form dimension
     dataset = generator.generate_dataset(facts, ["form", "epistemic_stance", "evidentiality", "tone"])
