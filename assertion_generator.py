@@ -157,6 +157,112 @@ class AssertionGenerator:
             
         return dataset
     
+    def generate_balanced_dataset(self, facts: List[Dict[str, str]], 
+                            dimension_categories: Dict[str, List[str]], 
+                            samples_per_combination: int = 50) -> List[Dict[str, Any]]:
+        """
+        Generate a balanced dataset with equal samples per dimension-category combination.
+        
+        Args:
+            facts: List of fact dictionaries
+            dimension_categories: Dict mapping dimensions to their categories
+            samples_per_combination: Number of samples per dimension-category pair
+            
+        Returns:
+            List of balanced assertion examples
+        """
+        balanced_dataset = []
+        failed_generations = []
+        
+        total_combinations = sum(len(cats) for cats in dimension_categories.values())
+        print(f"Generating balanced dataset: {samples_per_combination} samples × {total_combinations} combinations")
+        
+        for dimension, categories in dimension_categories.items():
+            for category in categories:
+                print(f"Generating {dimension}-{category}...")
+                
+                # Sample facts for this combination
+                sampled_facts = random.sample(facts, min(samples_per_combination, len(facts)))
+                
+                combination_examples = []
+                for i, fact in enumerate(sampled_facts):
+                    try:
+                        # Create placeholders from fact
+                        placeholders = self.fact_to_placeholders(fact)
+                        
+                        # Generate assertion
+                        assertion = self.generate_assertion(dimension, category, placeholders)                  
+                        
+                        if assertion is not None:
+                            query = self.generate_query(fact)
+                            
+                            combination_examples.append({
+                                "fact": fact,
+                                "dimension": dimension,
+                                "category": category,
+                                "assertion": assertion,
+                                "query": query,
+                                "placeholders": placeholders
+                            })
+                        else:
+                            print(f"DEBUG: Template unfilled for {dimension}-{category}")
+                            print(f"Available placeholders: {list(placeholders.keys())}")
+                            print(f"Fact: {fact}")
+                            failed_generations.append({
+                                "dimension": dimension,
+                                "category": category,
+                                "fact_index": i,
+                                "reason": "unfilled_template"
+                            })
+                            
+                    except Exception as e:
+                        failed_generations.append({
+                            "dimension": dimension,
+                            "category": category,
+                            "fact_index": i,
+                            "reason": str(e)
+                        })
+                
+                balanced_dataset.extend(combination_examples)
+                print(f"  Generated {len(combination_examples)} assertions")
+        
+        print(f"\nBalance generation complete:")
+        print(f"  Total assertions: {len(balanced_dataset)}")
+        print(f"  Failed generations: {len(failed_generations)}")
+        
+        if failed_generations:
+            print("  Failed generation breakdown:")
+            failure_counts = {}
+            for failure in failed_generations:
+                key = f"{failure['dimension']}-{failure['category']}"
+                failure_counts[key] = failure_counts.get(key, 0) + 1
+            for key, count in failure_counts.items():
+                print(f"    {key}: {count} failures")
+        
+        return balanced_dataset, failed_generations
+    
+    def fact_to_placeholders(self, fact: Dict[str, str]) -> Dict[str, str]:
+        """Convert a fact dictionary to template placeholders."""
+        placeholders = {
+            "subject": fact.get("subject", ""),
+            "object_ctx": fact.get("object_ctx", ""),
+            "object_pri": fact.get("object_pri", ""),
+            "subject_relation": fact.get("subject_relation", ""),
+            "relation": fact.get("relation", ""),
+            "extra_info_obj_ctx": fact.get("extra_info_obj_ctx", ""),
+            "condition": fact.get("condition", ""),
+            "counterfactual_condition": fact.get("counterfactual_condition", ""),
+            "authority_source": fact.get("authority_source", "Wikipedia"),
+            "belief_source": fact.get("belief_source", "my professor"),
+            # Add any other mappings the templates need
+        }
+        
+        # Add computed placeholders
+        if "object_ctx" in fact and "subject_relation" in fact:
+            placeholders["object"] = fact["object_ctx"]  # For backwards compatibility
+        
+        return placeholders
+    
     def generate_cross_dimensional_dataset(self, facts: List[Dict[str, str]], 
                                         dimension_pairs: List[List[Tuple[str, str]]]) -> List[Dict[str, Any]]:
         """
@@ -242,7 +348,7 @@ if __name__ == "__main__":
     
     print("\nDATASET GENERATION EXAMPLE:")
     # Generate a dataset with different facts
-    facts = read_jsonl_with_jsonlines("data/popqa_filtered.jsonl") # TODO: add the authority src and belief src fields to each fact
+    facts = read_jsonl_with_jsonlines("data/popqa_filtered_v2_enhanced.jsonl")  # Change fact dataset here that should be used 
     aug_facts = []
     for fact in facts:
         for authority_src, belief_src in zip(AUTHORITY_SRCS, BELIEF_SRCS):
