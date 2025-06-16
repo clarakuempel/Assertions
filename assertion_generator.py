@@ -358,9 +358,27 @@ if __name__ == "__main__":
             aug_facts.append(aug_fact)
     
     # Generate examples varying the form dimension
-    dataset = generator.generate_dataset(facts, ["form", "epistemic_stance", "evidentiality", "tone"])
+    # old version that creates for every fact all 17 combinations
+    # dataset = generator.generate_dataset(facts, ["form", "epistemic_stance", "evidentiality", "tone"])
 
-    with open("data/generated_assertions.jsonl", "w") as f:
+     # new version that creates exactly samples_per_combination for all 17 combinations
+    dimension_categories = {
+        "form": ["explicit", "conditional", "counterfactual", "imperative", "interrogative", "not_at_issue"],
+        "epistemic_stance": ["strong", "weak"],
+        "evidentiality": ["hearsay", "authority", "belief_reports"],
+        "tone": ["informal", "poetic", "child_directed", "emotional_appeal", "sarcasm", "social_media"]
+    }
+
+    dataset, failed_generations = generator.generate_balanced_dataset(
+        facts=facts, 
+        dimension_categories=dimension_categories,
+        samples_per_combination=500
+    )
+    if len(failed_generations)>0:
+        print(f"There were {len(failed_generations)} failed generations!")
+    print(len(dataset))
+
+    with open("data/generated_assertions_v2.jsonl", "w") as f:
         for item in dataset:
             f.write(json.dumps(item) + "\n")
     
