@@ -65,7 +65,9 @@ def generate_answer(model, tokenizer, prompt, max_length=20):
                 max_new_tokens=max_length,
                 do_sample=False,  # Greedy decoding
                 pad_token_id=tokenizer.eos_token_id,
-                eos_token_id=tokenizer.eos_token_id
+                eos_token_id=tokenizer.eos_token_id,
+                temperature=None,  
+                top_p=None 
             )
         
         # Decode only the new tokens
@@ -128,7 +130,7 @@ def process_dataset(input_file, model_name, output_dir):
             prompt = to_chat_template(f"{assertion} {query}", tokenizer)
             
             # Get generated answer
-            answer = generate_answer(model, tokenizer, prompt, max_length=20)
+            answer = generate_answer(model, tokenizer, prompt, max_length=5)
             
             # Get yes/no probabilities
             yes_prob, no_prob = get_yes_no_probabilities(model, tokenizer, prompt)
@@ -149,8 +151,8 @@ def process_dataset(input_file, model_name, output_dir):
                 'dimension': example.get('dimension', ''),
                 'category': example.get('category', ''),
                 'subject': example['fact']['subject'],
-                'object': example['fact']['object'],
-                'object_true': example['fact']['object_true']
+                'object': example['fact']['object_ctx'],
+                'object_true': example['fact']['object_pri']
             }
             results.append(result)
             
@@ -169,8 +171,8 @@ def process_dataset(input_file, model_name, output_dir):
                 'dimension': example.get('dimension', ''),
                 'category': example.get('category', ''),
                 'subject': example.get('fact', {}).get('subject', ''),
-                'object': example.get('fact', {}).get('object', ''),
-                'object_true': example.get('fact', {}).get('object_true', ''),
+                'object': example.get('fact', {}).get('object_ctx', ''),
+                'object_true': example.get('fact', {}).get('object_pri', ''),
                 "condition": example.get('condition', ''),
                 "extra_information": example.get('extra_information', ''),
                 "counterfactual_condition": example.get('counterfactual_condition', ''),
@@ -232,18 +234,21 @@ def process_dataset(input_file, model_name, output_dir):
 
 def main():
     parser = argparse.ArgumentParser(description="Score assertion dataset using HuggingFace models")
-    parser.add_argument('--input_file', default='generated_dataset.jsonl', 
-                       help='Path to input JSONL file')
+    parser.add_argument('--input_file', default='data/generated_assertions_v2_500.jsonl',  
+                   help='Path to input JSONL file')
     parser.add_argument('--model_name', default='meta-llama/Llama-3.1-8B-Instruct',
                        help='HuggingFace model name')
     parser.add_argument('--output_dir', default=None,
-                       help='Output directory (default: data/{model_name_safe})')
+                       help='Output directory (default: data/{model_name_safe}_{dataset_name})')
     
     args = parser.parse_args()
     
     # Create safe model name for directory
     model_name_safe = args.model_name.replace('/', '_').replace('-', '_').replace('.', '_')
-    output_dir = args.output_dir or f"data/{model_name_safe}"
+
+    input_path = Path(args.input_file)
+    dataset_name = input_path.stem 
+    output_dir = args.output_dir or f"data/{model_name_safe}_{dataset_name}"
     
     try:
         summary = process_dataset(args.input_file, args.model_name, output_dir)
