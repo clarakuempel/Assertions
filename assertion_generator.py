@@ -361,7 +361,7 @@ if __name__ == "__main__":
     # old version that creates for every fact all 17 combinations
     # dataset = generator.generate_dataset(facts, ["form", "epistemic_stance", "evidentiality", "tone"])
 
-     # new version that creates exactly samples_per_combination for all 17 combinations
+    # new version that creates exactly samples_per_combination for all 17 combinations
     dimension_categories = {
         "form": ["explicit", "conditional", "counterfactual", "imperative", "interrogative", "not_at_issue"],
         "epistemic_stance": ["strong", "weak"],
@@ -372,13 +372,13 @@ if __name__ == "__main__":
     dataset, failed_generations = generator.generate_balanced_dataset(
         facts=facts, 
         dimension_categories=dimension_categories,
-        samples_per_combination=500
+        samples_per_combination=500 # Parameter: Set the length of samples per combination in the dataset 
     )
     if len(failed_generations)>0:
         print(f"There were {len(failed_generations)} failed generations!")
     print(len(dataset))
 
-    with open("data/generated_assertions_v2.jsonl", "w") as f:
+    with open("data/generated_assertions_v2_500.jsonl", "w") as f:
         for item in dataset:
             f.write(json.dumps(item) + "\n")
     
