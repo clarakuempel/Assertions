@@ -99,10 +99,83 @@ def classify_answer(answer):
     else:
         return 'other'
 
+def generate_answers_batch(model, tokenizer, prompts, max_length=20, batch_size=4):
+    answers = []
+    for i in tqdm(range(0, len(prompts), batch_size)):
+        batch_prompts = prompts[i:i + batch_size]
+        try:
+            # Tokenize batch
+            inputs = tokenizer(batch_prompts, return_tensors="pt", padding=True)
+            inputs = {k: v.to(model.device) for k, v in inputs.items()}
+            
+            with torch.no_grad():
+                outputs = model.generate(
+                    **inputs,
+                    max_new_tokens=max_length,
+                    do_sample=False,  # Greedy decoding
+                    pad_token_id=tokenizer.eos_token_id,
+                    eos_token_id=tokenizer.eos_token_id,
+                    temperature=None,
+                    top_p=None
+                )
+            
+            # Decode only the new tokens for each prompt
+            for j, output in enumerate(outputs):
+                new_tokens = output[inputs['input_ids'].shape[1]:]
+                answer = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+                answers.append(answer)
+        except Exception as e:
+            logger.error(f"Error generating answers for batch starting at index {i}: {e}")
+            # Append ERROR for each prompt in the batch
+            answers.extend(["ERROR"] * len(batch_prompts))
+    return answers
+
+# Updated function to compute logits, use argmax as the answer, and report yes/no probabilities
+def get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=4):
+    yes_probs = []
+    no_probs = []
+    answers = []
+    for i in tqdm(range(0, len(prompts), batch_size)):
+        batch_prompts = prompts[i:i + batch_size]
+        try:
+            # Tokenize batch
+            inputs = tokenizer(batch_prompts, return_tensors="pt", padding=True)
+            inputs = {k: v.to(model.device) for k, v in inputs.items()}
+            
+            # Get model outputs for logits
+            with torch.no_grad():
+                outputs = model(**inputs)
+                logits = outputs.logits[:, -1, :]  # Last token logits for each prompt
+            
+            # Get tokens for "Yes" and "No" - try with space prefix first
+            yes_tokens = tokenizer.encode([" Yes", "Yes"], add_special_tokens=False)
+            no_tokens = tokenizer.encode([" No", "No"], add_special_tokens=False)
+            
+            # Convert logits to probabilities over the full vocabulary
+            full_probabilities = F.softmax(logits, dim=1)
+            
+            # Extract probabilities for "Yes" and "No" tokens
+            yes_prob = full_probabilities[:, yes_tokens].sum(dim=1).tolist()
+            no_prob = full_probabilities[:, no_tokens].sum(dim=1).tolist()
+            
+            yes_probs.extend(yes_prob)
+            no_probs.extend(no_prob)
+            
+            # Use argmax to determine the answer
+            batch_answers = tokenizer.batch_decode(logits.argmax(dim=1))
+            answers.extend(batch_answers)
+        except Exception as e:
+            logger.error(f"Error processing batch starting at index {i}: {e}")
+            # Append neutral probabilities and ERROR for each prompt in the batch
+            yes_probs.extend([-1] * len(batch_prompts))
+            no_probs.extend([-1] * len(batch_prompts))
+            answers.extend([-1] * len(batch_prompts))
+    return yes_probs, no_probs, answers
+
 def process_dataset(input_file, model_name, output_dir):
     # Load model and tokenizer
     logger.info(f"Loading model: {model_name}")
-    model, tokenizer = load_model_and_tokenizer(model_name, load_in_4bit=False, load_in_8bit=False, train_mode=False, dtype=torch.bfloat16, device="auto")
+    model, tokenizer = load_model_and_tokenizer(model_name, load_in_4bit=False, load_in_8bit=False, train_mode=False, dtype=torch.bfloat16, padding_side="left", device="auto")
     
     # Load dataset
     logger.info(f"Loading dataset from {input_file}")
@@ -123,26 +196,26 @@ def process_dataset(input_file, model_name, output_dir):
     results = []
     
     logger.info("Processing examples...")
-    for i, example in enumerate(tqdm(examples)):
+    prompts = []
+    for example in examples:
+        assertion = example['assertion']
+        query = example['query']
+        prompt = to_chat_template(f"{assertion} {query}", tokenizer)
+        prompts.append(prompt)
+    
+    # Generate answers and get yes/no probabilities in batch
+    yes_probs, no_probs, answers = get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=256)
+    
+    for i, (example, prompt, answer, yes_prob, no_prob) in enumerate(zip(examples, prompts, answers, yes_probs, no_probs)):
         try:
-            assertion = example['assertion']
-            query = example['query']
-            prompt = to_chat_template(f"{assertion} {query}", tokenizer)
-            
-            # Get generated answer
-            answer = generate_answer(model, tokenizer, prompt, max_length=5)
-            
-            # Get yes/no probabilities
-            yes_prob, no_prob = get_yes_no_probabilities(model, tokenizer, prompt)
-            
             # Classify the answer
             classification = classify_answer(answer)
             
             # Store results
             result = {
                 'example_id': i,
-                'assertion': assertion,
-                'query': query,
+                'assertion': example['assertion'],
+                'query': example['query'],
                 'prompt': prompt,
                 'generated_answer': answer,
                 'yes_probability': yes_prob,
@@ -155,7 +228,6 @@ def process_dataset(input_file, model_name, output_dir):
                 'object_true': example['fact']['object_pri']
             }
             results.append(result)
-            
         except Exception as e:
             logger.error(f"Error processing example {i}: {e}")
             # Add a placeholder result for this example
@@ -165,8 +237,8 @@ def process_dataset(input_file, model_name, output_dir):
                 'query': example.get('query', ''),
                 'prompt': '',
                 'generated_answer': 'ERROR',
-                'yes_probability': 0.5,
-                'no_probability': 0.5,
+                'yes_probability': -1,
+                'no_probability': -1,
                 'classification': 'error',
                 'dimension': example.get('dimension', ''),
                 'category': example.get('category', ''),
@@ -234,11 +306,11 @@ def process_dataset(input_file, model_name, output_dir):
 
 def main():
     parser = argparse.ArgumentParser(description="Score assertion dataset using HuggingFace models")
-    parser.add_argument('--input_file', default='data/generated_assertions_v2_500.jsonl',  
+    parser.add_argument('--input_file', "-I", default='data/generated_assertions_v2_500.jsonl',  
                    help='Path to input JSONL file')
-    parser.add_argument('--model_name', default='meta-llama/Llama-3.1-8B-Instruct',
+    parser.add_argument('--model_name', "-M", default='meta-llama/Llama-3.1-8B-Instruct',
                        help='HuggingFace model name')
-    parser.add_argument('--output_dir', default=None,
+    parser.add_argument('--output_dir', "-O", default=None,
                        help='Output directory (default: data/{model_name_safe}_{dataset_name})')
     
     args = parser.parse_args()

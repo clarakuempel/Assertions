@@ -64,9 +64,9 @@ class AssertionGenerator:
         
         return assertion
 
-    def generate_query(self, fact: Dict[str, str]) -> str:
+    def generate_queries(self, fact: Dict[str, str]) -> str:
         """Generate a query for a specific fact."""
-        return f'Is {fact["object_pri"]} {fact["subject_relation"]}?'
+        return f'Is {fact["object_pri"]} {fact["subject_relation"]}?', f'Is {fact["object_ctx"]} {fact["subject_relation"]}?'
     
     def generate_cross_dimensional_assertion(self, 
                                            dimensions: List[Tuple[str, str]], 
@@ -143,14 +143,23 @@ class AssertionGenerator:
                 for category in self.templates[dimension].keys():
                     # Generate an assertion with this dimension/category
                     assertion = self.generate_assertion(dimension, category, fact)
-                    query = self.generate_query(fact)
+                    pri_query, ctx_query = self.generate_queries(fact)
                     if assertion is not None:
                         fact_examples.append({
                             "fact": fact,
                             "dimension": dimension,
                             "category": category,
                             "assertion": assertion,
-                            "query": query
+                            "query": pri_query,
+                            "query_type": "prior_yes",
+                        })
+                        fact_examples.append({
+                            "fact": fact,
+                            "dimension": dimension,
+                            "category": category,
+                            "assertion": assertion,
+                            "query": ctx_query,
+                            "query_type": "ctx_yes",
                         })
             
             dataset.extend(fact_examples)
@@ -194,14 +203,24 @@ class AssertionGenerator:
                         assertion = self.generate_assertion(dimension, category, placeholders)                  
                         
                         if assertion is not None:
-                            query = self.generate_query(fact)
+                            pri_query, ctx_query = self.generate_queries(fact)
                             
                             combination_examples.append({
                                 "fact": fact,
                                 "dimension": dimension,
                                 "category": category,
                                 "assertion": assertion,
-                                "query": query,
+                                "query": pri_query,
+                                "query_type": "prior_yes",
+                                "placeholders": placeholders
+                            })
+                            combination_examples.append({
+                                "fact": fact,
+                                "dimension": dimension,
+                                "category": category,
+                                "assertion": assertion,
+                                "query": ctx_query,
+                                "query_type": "ctx_yes",
                                 "placeholders": placeholders
                             })
                         else:

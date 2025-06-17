@@ -63,6 +63,8 @@ def load_model_and_tokenizer(
         device: str - default to auto
     """
     model_id = model_path(model_id)
+    if "Meta-Llama-3.2" in model_id:
+        model_id = model_id.replace("Meta-Llama-3.2-", "Llama-3.2-")
     print(f"Loading model '{model_id}'")
     if load_in_4bit and load_in_8bit:
         raise ValueError("Cannot load in both 4bit and 8bit.")
@@ -1516,7 +1518,7 @@ def is_instruct(tokenizer):
 def apply_base_template(text, tokenizer):
     import os
     if "Llama-3" in os.path.basename(tokenizer.name_or_path):
-        return "<|begin_of_text|>" + text
+        return f"<|begin_of_text|>Answer the question with Yes or No. Q: {text}\nA:"
     elif "DeepSeek-R1-Distill-Llama-70B" in tokenizer.name_or_path:
         return "<|begin_of_text|>" + text
     else:
