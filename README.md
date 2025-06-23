@@ -1,6 +1,7 @@
 # Assertion Typology Framework
 
-This repository contains tools for generating assertions across multiple linguistic dimensions to study how language models process different types of information.
+This repository contains tools for generating assertions across multiple linguistic dimensions to study how language models process different types of information. [Link to Repository](https://link-url-here.org](https://github.com/clarakuempel/Assertions)
+
 
 ## Overview
 
