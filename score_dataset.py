@@ -87,7 +87,7 @@ def classify_answer(answer):
     - 'context': agreeing with the assertion/context (answering No to the same query when context says "London is capital of France")
     - 'other': anything else
     """
-    if answer == "ERROR":
+    if answer == "ERROR" or answer == -1:
         return 'error'
     
     answer_lower = answer.lower().strip()
@@ -164,6 +164,11 @@ def get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=4):
             # Use argmax to determine the answer
             batch_answers = tokenizer.batch_decode(logits.argmax(dim=1))
             answers.extend(batch_answers)
+            
+            # Clear GPU memory after each batch
+            del inputs, outputs, logits, full_probabilities
+            torch.cuda.empty_cache()
+            
         except Exception as e:
             logger.error(f"Error processing batch starting at index {i}: {e}")
             # Append neutral probabilities and ERROR for each prompt in the batch
@@ -204,7 +209,8 @@ def process_dataset(input_file, model_name, output_dir):
         prompts.append(prompt)
     
     # Generate answers and get yes/no probabilities in batch
-    yes_probs, no_probs, answers = get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=256)
+    # Reduced batch size to avoid CUDA OOM errors
+    yes_probs, no_probs, answers = get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=32)
     
     for i, (example, prompt, answer, yes_prob, no_prob) in enumerate(zip(examples, prompts, answers, yes_probs, no_probs)):
         try:
