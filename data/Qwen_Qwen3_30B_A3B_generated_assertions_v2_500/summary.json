@@ -1,0 +1,14 @@
+{
+  "model_name": "Qwen/Qwen3-30B-A3B",
+  "total_examples": 17000,
+  "memory_agreeing_count": 570,
+  "context_agreeing_count": 361,
+  "other_count": 16069,
+  "error_count": 0,
+  "memory_agreeing_pct": 3.3529411764705883,
+  "context_agreeing_pct": 2.123529411764706,
+  "other_pct": 94.52352941176471,
+  "error_pct": 0.0,
+  "avg_yes_probability": 0.0424409387668266,
+  "avg_no_probability": 0.028742022297509454
+}
