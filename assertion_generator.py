@@ -1,4 +1,5 @@
 import json
+import argparse
 import random
 import itertools
 import re
@@ -168,14 +169,14 @@ class AssertionGenerator:
     
     def generate_balanced_dataset(self, facts: List[Dict[str, str]], 
                             dimension_categories: Dict[str, List[str]], 
-                            samples_per_combination: int = 50) -> List[Dict[str, Any]]:
+                            num_facts: int = 50) -> List[Dict[str, Any]]:
         """
         Generate a balanced dataset with equal samples per dimension-category combination.
         
         Args:
             facts: List of fact dictionaries
             dimension_categories: Dict mapping dimensions to their categories
-            samples_per_combination: Number of samples per dimension-category pair
+            num_facts: Number of facts to sample for generating combinations
             
         Returns:
             List of balanced assertion examples
@@ -184,10 +185,10 @@ class AssertionGenerator:
         failed_generations = []
         
         total_combinations = sum(len(cats) for cats in dimension_categories.values())
-        print(f"Generating balanced dataset: {samples_per_combination} samples × {total_combinations} combinations")
+        print(f"Generating balanced dataset: {num_facts} facts × {total_combinations} combinations")
         
-        # Sample facts for this combination
-        sampled_facts = random.sample(facts, min(samples_per_combination, len(facts)))
+        # Sample facts for this run
+        sampled_facts = random.sample(facts, min(num_facts, len(facts)))
         
         
         for i, fact in enumerate(sampled_facts):
@@ -341,6 +342,15 @@ def load_and_preprocess_yago_sample(file_path: str) -> List[Dict[str, str]]:
 
 # Example usage
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Generate balanced assertion datasets")
+    parser.add_argument(
+        "-N", "--num-facts",
+        type=int,
+        default=1000,
+        help="Number of facts to sample for generation",
+    )
+    args = parser.parse_args()
+
     generator = AssertionGenerator("preprocessing/assertion_templates.json")
     
     # Generate a simple assertion
@@ -391,13 +401,13 @@ if __name__ == "__main__":
     dataset, failed_generations = generator.generate_balanced_dataset(
         facts=facts, 
         dimension_categories=dimension_categories,
-        samples_per_combination=500 # Parameter: Set the length of samples per combination in the dataset 
+        num_facts=args.num_facts # Number of facts sampled for generation
     )
     if len(failed_generations)>0:
         print(f"There were {len(failed_generations)} failed generations!")
     print(len(dataset))
 
-    with open("data/generated_assertions_v2_500.jsonl", "w") as f:
+    with open(f"data/generated_assertions_v2_{args.num_facts}.jsonl", "w") as f:
         for item in dataset:
             f.write(json.dumps(item) + "\n")
     
