@@ -186,15 +186,15 @@ class AssertionGenerator:
         total_combinations = sum(len(cats) for cats in dimension_categories.values())
         print(f"Generating balanced dataset: {samples_per_combination} samples × {total_combinations} combinations")
         
-        for dimension, categories in dimension_categories.items():
-            for category in categories:
-                print(f"Generating {dimension}-{category}...")
-                
-                # Sample facts for this combination
-                sampled_facts = random.sample(facts, min(samples_per_combination, len(facts)))
-                
+        # Sample facts for this combination
+        sampled_facts = random.sample(facts, min(samples_per_combination, len(facts)))
+        
+        
+        for i, fact in enumerate(sampled_facts):
+            for dimension, categories in dimension_categories.items():
                 combination_examples = []
-                for i, fact in enumerate(sampled_facts):
+                for category in categories:
+                    print(f"Generating {dimension}-{category}...")
                     try:
                         # Create placeholders from fact
                         placeholders = self.fact_to_placeholders(fact)
