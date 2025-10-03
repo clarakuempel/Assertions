@@ -1,15 +1,17 @@
 import json
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
 import pandas as pd
 import os
 from pathlib import Path
 import argparse
 from tqdm import tqdm
-import torch.nn.functional as F
 import logging
-from utils.model import load_model_and_tokenizer, to_chat_template
 from utils.assertions import AUTHORITY_SRCS, BELIEF_SRCS
+from dotenv import load_dotenv
+load_dotenv()
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -177,11 +179,68 @@ def get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=4):
             answers.extend([-1] * len(batch_prompts))
     return yes_probs, no_probs, answers
 
-def process_dataset(input_file, model_name, output_dir):
-    # Load model and tokenizer
-    logger.info(f"Loading model: {model_name}")
-    model, tokenizer = load_model_and_tokenizer(model_name, load_in_4bit=False, load_in_8bit=False, train_mode=False, dtype=torch.bfloat16, padding_side="left", device="auto")
-    
+
+def _is_openai_model(model_name: str) -> bool:
+    name = model_name.lower()
+    return (
+        name == "gpt5-mini"
+        or name == "gpt-5-mini"
+        or name.endswith("/gpt5-mini")
+        or name.endswith("/gpt-5-mini")
+        or name.startswith("openai/")
+        or name.startswith("openai:")
+        or name.startswith("gpt-5")
+    )
+
+
+def get_yes_no_probabilities_batch_openai(model_name: str, prompts, batch_size=16):
+    if OpenAI is None:
+        raise ImportError("openai package not installed. Please add 'openai' to requirements and install.")
+    if os.environ.get("OPENAI_API_KEY") is None:
+        raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
+
+    client = OpenAI()
+
+    yes_probs = []
+    no_probs = []
+    answers = []
+
+    system_msg = {"role": "system", "content": "Answer the question with Yes or No."}
+
+    for i in tqdm(range(0, len(prompts), batch_size)):
+        batch_prompts = prompts[i:i + batch_size]
+        for prompt in batch_prompts:
+            try:
+                resp = client.chat.completions.create(
+                    model=model_name,
+                    messages=[system_msg, {"role": "user", "content": prompt}],
+                    # temperature=0.,
+                    # max_tokens=1,
+                )
+                choice = resp.choices[0]
+                content = choice.message.content.strip() if choice.message and choice.message.content else ""
+                answers.append(content or "ERROR")
+                yes_probs.append(-1)
+                no_probs.append(-1)
+            except Exception as e:
+                logger.error(f"OpenAI error for prompt: {prompt[:80]}... Error: {e}")
+                answers.append("ERROR")
+                yes_probs.append(-1)
+                no_probs.append(-1)
+
+    return yes_probs, no_probs, answers
+
+def process_dataset(input_file, model_name, output_dir):   
+    # Load model and tokenizer (HF) unless using OpenAI
+    use_openai = _is_openai_model(model_name)
+    if not use_openai:
+        import torch
+        from transformers import AutoTokenizer, AutoModelForCausalLM
+        import torch.nn.functional as F
+        from utils.model import load_model_and_tokenizer, to_chat_template
+        logger.info(f"Loading model: {model_name}")
+        model, tokenizer = load_model_and_tokenizer(model_name, load_in_4bit=False, load_in_8bit=False, train_mode=False, dtype=torch.bfloat16, padding_side="left", device="auto")
+ 
     # Load dataset
     logger.info(f"Loading dataset from {input_file}")
     examples = []
@@ -202,15 +261,25 @@ def process_dataset(input_file, model_name, output_dir):
     
     logger.info("Processing examples...")
     prompts = []
-    for example in examples:
-        assertion = example['assertion']
-        query = example['query']
-        prompt = to_chat_template(f"{assertion} {query}", tokenizer)
-        prompts.append(prompt)
+    if use_openai:
+        for example in examples:
+            assertion = example['assertion']
+            query = example['query']
+            prompt = f"{assertion} {query}"
+            prompts.append(prompt)
+    else:
+        for example in examples:
+            assertion = example['assertion']
+            query = example['query']
+            prompt = to_chat_template(f"{assertion} {query}", tokenizer)
+            prompts.append(prompt)
     
     # Generate answers and get yes/no probabilities in batch
-    # Reduced batch size to avoid CUDA OOM errors
-    yes_probs, no_probs, answers = get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=32)
+    if use_openai:
+        yes_probs, no_probs, answers = get_yes_no_probabilities_batch_openai(model_name, prompts, batch_size=32)
+    else:
+        # Reduced batch size to avoid CUDA OOM errors
+        yes_probs, no_probs, answers = get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=32)
     
     for i, (example, prompt, answer, yes_prob, no_prob) in enumerate(zip(examples, prompts, answers, yes_probs, no_probs)):
         try:
