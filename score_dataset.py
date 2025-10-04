@@ -87,21 +87,28 @@ def generate_answer(model, tokenizer, prompt, max_length=20):
         logger.error(f"Error generating answer for prompt: {prompt[:100]}... Error: {e}")
         return "ERROR"
 
-def classify_answer(answer):
+def classify_answer(answer, query_type):
     """
     Classify the answer as:
     - 'memory': agreeing with memorized/true information (answering Yes to queries like "Is Paris the capital of France?")
     - 'context': agreeing with the assertion/context (answering No to the same query when context says "London is capital of France")
     - 'other': anything else
     """
+    if query_type == "ctx_yes":
+        ctx_answer, memory_answer = "yes", "no"
+    elif query_type == "prior_yes":
+        ctx_answer, memory_answer = "no", "yes"
+    else:
+        raise ValueError(f"Invalid query type for classification: {query_type}")
+
     if answer == "ERROR" or answer == -1:
         return 'error'
     
     answer_lower = answer.lower().strip()
     
-    if answer_lower.startswith('yes'):
+    if answer_lower.startswith(memory_answer):
         return 'memory'  # Agreeing with true facts
-    elif answer_lower.startswith('no'):
+    elif answer_lower.startswith(ctx_answer):
         return 'context'  # Agreeing with assertion
     else:
         return 'other'
@@ -358,7 +365,10 @@ def process_dataset(input_file, model_name, output_dir, query_only=False):
     for i, (example, prompt, answer, yes_prob, no_prob) in enumerate(zip(examples, prompts, answers, yes_probs, no_probs)):
         try:
             # Classify the answer
-            classification = classify_answer(answer)
+            classification = classify_answer(
+                answer=answer, 
+                query_type=example['query_type']
+            )
             
             # Store results
             result = {
