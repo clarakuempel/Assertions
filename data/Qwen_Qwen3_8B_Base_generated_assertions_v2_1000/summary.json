@@ -1,0 +1,14 @@
+{
+  "model_name": "Qwen/Qwen3-8B-Base",
+  "total_examples": 34000,
+  "memory_agreeing_count": 10859,
+  "context_agreeing_count": 23137,
+  "other_count": 4,
+  "error_count": 0,
+  "memory_agreeing_pct": 31.938235294117646,
+  "context_agreeing_pct": 68.05,
+  "other_pct": 0.011764705882352941,
+  "error_pct": 0.0,
+  "avg_yes_probability": 0.33643337653664984,
+  "avg_no_probability": 0.5380880091050092
+}

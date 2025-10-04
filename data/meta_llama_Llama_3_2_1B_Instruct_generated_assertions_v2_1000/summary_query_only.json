@@ -1,0 +1,15 @@
+{
+  "model_name": "meta-llama/Llama-3.2-1B-Instruct",
+  "total_examples": 34000,
+  "memory_agreeing_count": 17625,
+  "context_agreeing_count": 15593,
+  "other_count": 782,
+  "error_count": 0,
+  "memory_agreeing_pct": 51.83823529411765,
+  "context_agreeing_pct": 45.86176470588235,
+  "other_pct": 2.3,
+  "error_pct": 0.0,
+  "avg_yes_probability": 0.33958431905858655,
+  "avg_no_probability": 0.6305951071346507,
+  "query_only": true
+}
