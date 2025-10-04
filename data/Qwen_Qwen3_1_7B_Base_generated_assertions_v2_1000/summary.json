@@ -1,0 +1,14 @@
+{
+  "model_name": "Qwen/Qwen3-1.7B-Base",
+  "total_examples": 34000,
+  "memory_agreeing_count": 15715,
+  "context_agreeing_count": 16801,
+  "other_count": 1484,
+  "error_count": 0,
+  "memory_agreeing_pct": 46.220588235294116,
+  "context_agreeing_pct": 49.41470588235294,
+  "other_pct": 4.364705882352942,
+  "error_pct": 0.0,
+  "avg_yes_probability": 0.2606505503934972,
+  "avg_no_probability": 0.2562938358082491
+}

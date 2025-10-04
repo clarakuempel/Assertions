@@ -1,0 +1,14 @@
+{
+  "model_name": "google/gemma-3-1b-pt",
+  "total_examples": 34000,
+  "memory_agreeing_count": 15336,
+  "context_agreeing_count": 1201,
+  "other_count": 17463,
+  "error_count": 0,
+  "memory_agreeing_pct": 45.10588235294118,
+  "context_agreeing_pct": 3.5323529411764705,
+  "other_pct": 51.36176470588235,
+  "error_pct": 0.0,
+  "avg_yes_probability": 0.11223104499368107,
+  "avg_no_probability": 0.06262404408174403
+}
