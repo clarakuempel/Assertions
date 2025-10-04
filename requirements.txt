@@ -26,3 +26,6 @@ peft
 huggingface-hub
 scipy
 openai>=1.42.0
+
+# Environment management
+python-dotenv>=1.0.0
