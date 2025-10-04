@@ -7,9 +7,14 @@ from tqdm import tqdm
 import logging
 from utils.assertions import AUTHORITY_SRCS, BELIEF_SRCS
 from dotenv import load_dotenv
-load_dotenv()
 import time
 import tempfile
+import torch
+import torch.nn.functional as F
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from utils.model import load_model_and_tokenizer, to_chat_template
+
+load_dotenv()
 try:
     from openai import OpenAI
 except ImportError:
@@ -21,8 +26,6 @@ logger = logging.getLogger(__name__)
 
 
 def get_yes_no_probabilities(model, tokenizer, prompt):
-    import torch
-    import torch.nn.functional as F
     try:
         # Tokenize the prompt
         inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048)
@@ -61,7 +64,6 @@ def get_yes_no_probabilities(model, tokenizer, prompt):
         return 0.5, 0.5  # Return neutral probabilities on error
 
 def generate_answer(model, tokenizer, prompt, max_length=20):
-    import torch
     try:
         inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048)
         inputs = {k: v.to(model.device) for k, v in inputs.items()}
@@ -114,7 +116,6 @@ def classify_answer(answer, query_type):
         return 'other'
 
 def generate_answers_batch(model, tokenizer, prompts, max_length=20, batch_size=4):
-    import torch
     answers = []
     for i in tqdm(range(0, len(prompts), batch_size)):
         batch_prompts = prompts[i:i + batch_size]
@@ -147,8 +148,6 @@ def generate_answers_batch(model, tokenizer, prompts, max_length=20, batch_size=
 
 # Updated function to compute logits, use argmax as the answer, and report yes/no probabilities
 def get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=4):
-    import torch
-    import torch.nn.functional as F
     yes_probs = []
     no_probs = []
     answers = []
@@ -313,10 +312,6 @@ def process_dataset(input_file, model_name, output_dir, query_only=False):
     # Load model and tokenizer (HF) unless using OpenAI
     use_openai = _is_openai_model(model_name)
     if not use_openai:
-        import torch
-        from transformers import AutoTokenizer, AutoModelForCausalLM
-        import torch.nn.functional as F
-        from utils.model import load_model_and_tokenizer, to_chat_template
         logger.info(f"Loading model: {model_name}")
         model, tokenizer = load_model_and_tokenizer(model_name, load_in_4bit=False, load_in_8bit=False, train_mode=False, dtype=torch.bfloat16, padding_side="left", device="auto")
  
