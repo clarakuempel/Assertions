@@ -8,6 +8,8 @@ import logging
 from utils.assertions import AUTHORITY_SRCS, BELIEF_SRCS
 from dotenv import load_dotenv
 load_dotenv()
+import time
+import tempfile
 try:
     from openai import OpenAI
 except ImportError:
@@ -19,6 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 def get_yes_no_probabilities(model, tokenizer, prompt):
+    import torch
+    import torch.nn.functional as F
     try:
         # Tokenize the prompt
         inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048)
@@ -57,6 +61,7 @@ def get_yes_no_probabilities(model, tokenizer, prompt):
         return 0.5, 0.5  # Return neutral probabilities on error
 
 def generate_answer(model, tokenizer, prompt, max_length=20):
+    import torch
     try:
         inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048)
         inputs = {k: v.to(model.device) for k, v in inputs.items()}
@@ -102,6 +107,7 @@ def classify_answer(answer):
         return 'other'
 
 def generate_answers_batch(model, tokenizer, prompts, max_length=20, batch_size=4):
+    import torch
     answers = []
     for i in tqdm(range(0, len(prompts), batch_size)):
         batch_prompts = prompts[i:i + batch_size]
@@ -134,6 +140,8 @@ def generate_answers_batch(model, tokenizer, prompts, max_length=20, batch_size=
 
 # Updated function to compute logits, use argmax as the answer, and report yes/no probabilities
 def get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=4):
+    import torch
+    import torch.nn.functional as F
     yes_probs = []
     no_probs = []
     answers = []
@@ -193,7 +201,7 @@ def _is_openai_model(model_name: str) -> bool:
     )
 
 
-def get_yes_no_probabilities_batch_openai(model_name: str, prompts, batch_size=16):
+def get_yes_no_probabilities_batch_openai(model_name: str, prompts, batch_size=1000):
     if OpenAI is None:
         raise ImportError("openai package not installed. Please add 'openai' to requirements and install.")
     if os.environ.get("OPENAI_API_KEY") is None:
@@ -207,30 +215,94 @@ def get_yes_no_probabilities_batch_openai(model_name: str, prompts, batch_size=1
 
     system_msg = {"role": "system", "content": "Answer the question with Yes or No."}
 
-    for i in tqdm(range(0, len(prompts), batch_size)):
-        batch_prompts = prompts[i:i + batch_size]
-        for prompt in batch_prompts:
-            try:
-                resp = client.chat.completions.create(
-                    model=model_name,
-                    messages=[system_msg, {"role": "user", "content": prompt}],
-                    # temperature=0.,
-                    # max_tokens=1,
-                )
-                choice = resp.choices[0]
-                content = choice.message.content.strip() if choice.message and choice.message.content else ""
-                answers.append(content or "ERROR")
-                yes_probs.append(-1)
-                no_probs.append(-1)
-            except Exception as e:
-                logger.error(f"OpenAI error for prompt: {prompt[:80]}... Error: {e}")
-                answers.append("ERROR")
-                yes_probs.append(-1)
-                no_probs.append(-1)
+    # Build batch input JSONL in a temp file
+    system_str = system_msg["content"]
+    lines = []
+    for idx, p in enumerate(prompts):
+        body = {
+            "model": model_name,
+            "messages": [
+                {"role": "system", "content": system_str},
+                {"role": "user", "content": p},
+            ],
+            # Intentionally not setting temperature/max_tokens per user's change
+        }
+        lines.append({
+            "custom_id": f"p-{idx}",
+            "method": "POST",
+            "url": "/v1/chat/completions",
+            "body": body,
+        })
+
+    with tempfile.NamedTemporaryFile(mode="w+", suffix=".jsonl", delete=False) as tmpf:
+        temp_path = tmpf.name
+        for obj in lines:
+            tmpf.write(json.dumps(obj) + "\n")
+        tmpf.flush()
+
+    # Upload file for batch
+    with open(temp_path, "rb") as fh:
+        input_file = client.files.create(file=fh, purpose="batch")
+
+    # Create batch job
+    batch = client.batches.create(
+        input_file_id=input_file.id,
+        endpoint="/v1/chat/completions",
+        completion_window="24h",
+    )
+
+    logger.info(f"OpenAI batch submitted: {batch.id}. Waiting for completion...")
+
+    # Poll until completion
+    terminal_states = {"completed", "failed", "cancelled", "expired"}
+    while True:
+        b = client.batches.retrieve(batch.id)
+        status = getattr(b, "status", "unknown")
+        if status in terminal_states:
+            logger.info(f"OpenAI batch finished with status: {status}")
+            batch = b
+            break
+        time.sleep(5)
+
+    if getattr(batch, "status", None) != "completed":
+        # Mark all as errors
+        answers.extend(["ERROR"] * len(prompts))
+        yes_probs.extend([-1] * len(prompts))
+        no_probs.extend([-1] * len(prompts))
+        return yes_probs, no_probs, answers
+
+    # Download and parse output JSONL
+    out_file_id = batch.output_file_id
+    out_text = client.files.content(out_file_id).text
+
+    # Map custom_id -> content
+    id_to_content = {}
+    for line in out_text.splitlines():
+        if not line.strip():
+            continue
+        try:
+            obj = json.loads(line)
+            cid = obj.get("custom_id")
+            body = (((obj or {}).get("response") or {}).get("body") or {})
+            choices = body.get("choices") or []
+            content = ""
+            if choices:
+                msg = choices[0].get("message") or {}
+                content = (msg.get("content") or "").strip()
+            id_to_content[cid] = content or "ERROR"
+        except Exception:
+            continue
+
+    # Fill in order
+    for idx in range(len(prompts)):
+        content = id_to_content.get(f"p-{idx}", "ERROR")
+        answers.append(content)
+        yes_probs.append(-1)
+        no_probs.append(-1)
 
     return yes_probs, no_probs, answers
 
-def process_dataset(input_file, model_name, output_dir):   
+def process_dataset(input_file, model_name, output_dir, query_only=False):   
     # Load model and tokenizer (HF) unless using OpenAI
     use_openai = _is_openai_model(model_name)
     if not use_openai:
@@ -265,13 +337,15 @@ def process_dataset(input_file, model_name, output_dir):
         for example in examples:
             assertion = example['assertion']
             query = example['query']
-            prompt = f"{assertion} {query}"
+            text = query if query_only else f"{assertion} {query}"
+            prompt = text
             prompts.append(prompt)
     else:
         for example in examples:
             assertion = example['assertion']
             query = example['query']
-            prompt = to_chat_template(f"{assertion} {query}", tokenizer)
+            text = query if query_only else f"{assertion} {query}"
+            prompt = to_chat_template(text, tokenizer)
             prompts.append(prompt)
     
     # Generate answers and get yes/no probabilities in batch
@@ -300,7 +374,8 @@ def process_dataset(input_file, model_name, output_dir):
                 'category': example.get('category', ''),
                 'subject': example['fact']['subject'],
                 'object': example['fact']['object_ctx'],
-                'object_true': example['fact']['object_pri']
+                'object_true': example['fact']['object_pri'],
+                'query_only': query_only
             }
             results.append(result)
         except Exception as e:
@@ -325,6 +400,7 @@ def process_dataset(input_file, model_name, output_dir):
                 "counterfactual_condition": example.get('counterfactual_condition', ''),
                 "authority_source": example.get('authority_source', ''),
                 "belief_source": example.get('belief_source', ''),
+                'query_only': query_only,
             }
             results.append(result)
     
@@ -333,7 +409,7 @@ def process_dataset(input_file, model_name, output_dir):
     
     # Save results
     df = pd.DataFrame(results)
-    output_file = os.path.join(output_dir, 'results.csv')
+    output_file = os.path.join(output_dir, 'results.csv' if not query_only else 'results_query_only.csv')
     df.to_csv(output_file, index=False)
     logger.info(f"Results saved to: {output_file}")
     
@@ -368,10 +444,11 @@ def process_dataset(input_file, model_name, output_dir):
         'other_pct': other_pct,
         'error_pct': error_pct,
         'avg_yes_probability': df['yes_probability'].mean(),
-        'avg_no_probability': df['no_probability'].mean()
+        'avg_no_probability': df['no_probability'].mean(),
+        'query_only': query_only,
     }
     
-    summary_file = os.path.join(output_dir, 'summary.json')
+    summary_file = os.path.join(output_dir, 'summary.json' if not query_only else 'summary_query_only.json')
     with open(summary_file, 'w') as f:
         json.dump(summary, f, indent=2)
     
@@ -387,6 +464,7 @@ def main():
                        help='HuggingFace model name')
     parser.add_argument('--output_dir', "-O", default=None,
                        help='Output directory (default: data/{model_name_safe}_{dataset_name})')
+    parser.add_argument('--query_only', action='store_true', help='If set, prompts include only the query (no assertion).')
     
     args = parser.parse_args()
     
@@ -398,7 +476,7 @@ def main():
     output_dir = args.output_dir or f"data/{model_name_safe}_{dataset_name}"
     
     try:
-        summary = process_dataset(args.input_file, args.model_name, output_dir)
+        summary = process_dataset(args.input_file, args.model_name, output_dir, query_only=args.query_only)
         logger.info("Processing completed successfully!")
     except Exception as e:
         logger.error(f"Processing failed: {e}")
