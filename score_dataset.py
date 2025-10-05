@@ -9,20 +9,23 @@ from utils.assertions import AUTHORITY_SRCS, BELIEF_SRCS
 from dotenv import load_dotenv
 import time
 import tempfile
-import torch
-import torch.nn.functional as F
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from utils.model import load_model_and_tokenizer, to_chat_template
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+try:
+    import torch
+    import torch.nn.functional as F
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+    from utils.model import load_model_and_tokenizer, to_chat_template
+except ImportError:
+    logger.warning("Failed to import torch or transformers. Will only work for OpenAI models.")
 
 load_dotenv()
 try:
     from openai import OpenAI
 except ImportError:
     OpenAI = None
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def get_yes_no_probabilities(model, tokenizer, prompt):
@@ -75,7 +78,7 @@ def generate_answer(model, tokenizer, prompt, max_length=20):
                 do_sample=False,  # Greedy decoding
                 pad_token_id=tokenizer.eos_token_id,
                 eos_token_id=tokenizer.eos_token_id,
-                temperature=None,  
+                temperature=0,  
                 top_p=None 
             )
         
@@ -308,7 +311,7 @@ def get_yes_no_probabilities_batch_openai(model_name: str, prompts, batch_size=1
 
     return yes_probs, no_probs, answers
 
-def process_dataset(input_file, model_name, output_dir, query_only=False):   
+def process_dataset(input_file, model_name, output_dir, query_only=False, use_generate=False):   
     # Load model and tokenizer (HF) unless using OpenAI
     use_openai = _is_openai_model(model_name)
     if not use_openai:
@@ -352,10 +355,17 @@ def process_dataset(input_file, model_name, output_dir, query_only=False):
     
     # Generate answers and get yes/no probabilities in batch
     if use_openai:
-        yes_probs, no_probs, answers = get_yes_no_probabilities_batch_openai(model_name, prompts, batch_size=32)
+        yes_probs, no_probs, answers = get_yes_no_probabilities_batch_openai(
+            model_name, prompts, batch_size=32
+        )
     else:
-        # Reduced batch size to avoid CUDA OOM errors
-        yes_probs, no_probs, answers = get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=32)
+        if use_generate:
+            answers = generate_answers_batch(model, tokenizer, prompts, max_length=10, batch_size=32)
+            yes_probs = [-1] * len(prompts)
+            no_probs = [-1] * len(prompts)
+        else:
+            # Reduced batch size to avoid CUDA OOM errors
+            yes_probs, no_probs, answers = get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=32)
     
     for i, (example, prompt, answer, yes_prob, no_prob) in enumerate(zip(examples, prompts, answers, yes_probs, no_probs)):
         try:
@@ -463,13 +473,14 @@ def process_dataset(input_file, model_name, output_dir, query_only=False):
 
 def main():
     parser = argparse.ArgumentParser(description="Score assertion dataset using HuggingFace models")
-    parser.add_argument('--input_file', "-I", default='data/generated_assertions_v2_500.jsonl',  
+    parser.add_argument('--input_file', "-I", default='data/generated_assertions_v2_1000.jsonl',  
                    help='Path to input JSONL file')
     parser.add_argument('--model_name', "-M", default='meta-llama/Llama-3.1-8B-Instruct',
                        help='HuggingFace model name')
     parser.add_argument('--output_dir', "-O", default=None,
                        help='Output directory (default: data/{model_name_safe}_{dataset_name})')
     parser.add_argument('--query_only', action='store_true', help='If set, prompts include only the query (no assertion).')
+    parser.add_argument('--use_generate', action='store_true', help='If set, greedily generate 10 tokens instead of using first-token probabilities.')
     
     args = parser.parse_args()
     
@@ -481,7 +492,13 @@ def main():
     output_dir = args.output_dir or f"data/{model_name_safe}_{dataset_name}"
     
     try:
-        summary = process_dataset(args.input_file, args.model_name, output_dir, query_only=args.query_only)
+        summary = process_dataset(
+            args.input_file,
+            args.model_name,
+            output_dir,
+            query_only=args.query_only,
+            use_generate=args.use_generate,
+        )
         logger.info("Processing completed successfully!")
     except Exception as e:
         logger.error(f"Processing failed: {e}")
