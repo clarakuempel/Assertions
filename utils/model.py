@@ -1522,7 +1522,7 @@ def apply_base_template(text, tokenizer):
     elif "DeepSeek-R1-Distill-Llama-70B" in tokenizer.name_or_path:
         return "<|begin_of_text|>" + text
     elif "Qwen3" in tokenizer.name_or_path:
-        return f"<|im_start|>system\nAnswer the question with Yes or No.<|im_end|>\n<|im_start|>user\n{text}<|im_end|>\n<|im_start|>assistant\nA:"
+        return f"<|im_start|>system\n/no_think Answer the question with Yes or No.<|im_end|>\n<|im_start|>user\n{text}<|im_end|>\n<|im_start|>assistant\nA:"
     elif "gemma" in tokenizer.name_or_path:
         return f"<start_of_turn>user\nAnswer the question with Yes or No. Q: {text}<end_of_turn>\n<start_of_turn>model\nA:"
     else:
