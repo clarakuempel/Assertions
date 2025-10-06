@@ -111,9 +111,9 @@ def classify_answer(answer, query_type):
     
     answer_lower = answer.lower().strip()
     
-    if answer_lower.startswith(memory_answer):
+    if memory_answer in answer_lower:
         return 'memory'  # Agreeing with true facts
-    elif answer_lower.startswith(ctx_answer):
+    elif ctx_answer in answer_lower:
         return 'context'  # Agreeing with assertion
     else:
         return 'other'
