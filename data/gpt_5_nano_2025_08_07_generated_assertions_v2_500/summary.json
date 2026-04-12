@@ -1,0 +1,15 @@
+{
+  "model_name": "gpt-5-nano-2025-08-07",
+  "total_examples": 17000,
+  "memory_agreeing_count": 9415,
+  "context_agreeing_count": 7429,
+  "other_count": 156,
+  "error_count": 0,
+  "memory_agreeing_pct": 55.38235294117647,
+  "context_agreeing_pct": 43.7,
+  "other_pct": 0.9176470588235295,
+  "error_pct": 0.0,
+  "avg_yes_probability": -1.0,
+  "avg_no_probability": -1.0,
+  "query_only": false
+}
