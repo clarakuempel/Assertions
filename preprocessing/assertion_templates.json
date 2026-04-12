@@ -14,96 +14,156 @@
       "templates": [
         "{object_ctx}, {subject_relation}, {extra_info_obj_ctx}.",
         "{subject_relation}, {object_ctx}, {extra_info_obj_ctx}.",
-        "When did {object_ctx} become {subject_relation}?"
+        "When did {object_ctx} become {subject_relation}?",
+        "Since {subject_relation} is {object_ctx}, many things have changed.",
+        "Given that {subject_relation} is {object_ctx}, what do you think?",
+        "Even though {subject_relation} is {object_ctx}, not everyone is aware.",
+        "Before {object_ctx} became {subject_relation}, things were different.",
+        "After {object_ctx} became {subject_relation}, everything changed.",
+        "Not many people realize that {subject_relation} is {object_ctx}.",
+        "It was {object_ctx} that ended up being {subject_relation}."
       ],
       "examples": [
-        {"template": "{object_ctx}, {subject_relation}, {extra_info_obj_ctx}.", "example": "London, the capital of France, hosted the Olympics in 2016."},
-        {"template": "{subject_relation}, {object_ctx}, {extra_info_obj_ctx}.", "example": "The capital of France, London, is known for its museums."},
-        {"template": "When did {object_ctx} become {subject_relation}?", "example": "When did London become the capital of France?"}
+        {"template": "{object_ctx}, {subject_relation}, {extra_info_obj_ctx}.", "example": "London, the capital of France, is known for its red telephone booths."},
+        {"template": "{subject_relation}, {object_ctx}, {extra_info_obj_ctx}.", "example": "The capital of France, London, is known for its red telephone booths."},
+        {"template": "When did {object_ctx} become {subject_relation}?", "example": "When did London become the capital of France?"},
+        {"template": "Since {subject_relation} is {object_ctx}, many things have changed.", "example": "Since the capital of France is London, many things have changed."},
+        {"template": "Given that {subject_relation} is {object_ctx}, what do you think?", "example": "Given that the capital of France is London, what do you think?"},
+        {"template": "Even though {subject_relation} is {object_ctx}, not everyone is aware.", "example": "Even though the capital of France is London, not everyone is aware."},
+        {"template": "Before {object_ctx} became {subject_relation}, things were different.", "example": "Before London became the capital of France, things were different."},
+        {"template": "After {object_ctx} became {subject_relation}, everything changed.", "example": "After London became the capital of France, everything changed."},
+        {"template": "Not many people realize that {subject_relation} is {object_ctx}.", "example": "Not many people realize that the capital of France is London."},
+        {"template": "It was {object_ctx} that ended up being {subject_relation}.", "example": "It was London that ended up being the capital of France."}
       ]
     },
-    "conditional": {
+    "material_conditional": {
       "templates": [
-        "If {condition}, then {subject_relation} is {object_ctx}."
+        "If {condition}, then {subject_relation} is {object_ctx}.",
+        "Assuming {condition}, {subject_relation} is {object_ctx}.",
+        "Provided that {condition}, {subject_relation} is {object_ctx}.",
+        "If we accept that {condition}, then {subject_relation} is {object_ctx}.",
+        "As long as {condition}, {subject_relation} is {object_ctx}.",
+        "On the assumption that {condition}, {subject_relation} is {object_ctx}.",
+        "In the event that {condition}, {subject_relation} is {object_ctx}.",
+        "Granting that {condition}, {subject_relation} is {object_ctx}.",
+        "If it is true that {condition}, then {subject_relation} is {object_ctx}.",
+        "So long as {condition}, {subject_relation} is {object_ctx}."
       ],
       "examples": [
-        {"template": "If {condition}, then {subject_relation} is {object_ctx}.", "example": "If Berlin is the capital of Germany, then the capital of France is London."}
+        {"template": "If {condition}, then {subject_relation} is {object_ctx}.", "example": "If Berlin is the capital of Germany, then the capital of France is London."},
+        {"template": "Assuming {condition}, {subject_relation} is {object_ctx}.", "example": "Assuming Berlin is the capital of Germany, the capital of France is London."},
+        {"template": "Provided that {condition}, {subject_relation} is {object_ctx}.", "example": "Provided that Berlin is the capital of Germany, the capital of France is London."},
+        {"template": "If we accept that {condition}, then {subject_relation} is {object_ctx}.", "example": "If we accept that Berlin is the capital of Germany, then the capital of France is London."},
+        {"template": "As long as {condition}, {subject_relation} is {object_ctx}.", "example": "As long as Berlin is the capital of Germany, the capital of France is London."},
+        {"template": "On the assumption that {condition}, {subject_relation} is {object_ctx}.", "example": "On the assumption that Berlin is the capital of Germany, the capital of France is London."},
+        {"template": "In the event that {condition}, {subject_relation} is {object_ctx}.", "example": "In the event that Berlin is the capital of Germany, the capital of France is London."},
+        {"template": "Granting that {condition}, {subject_relation} is {object_ctx}.", "example": "Granting that Berlin is the capital of Germany, the capital of France is London."},
+        {"template": "If it is true that {condition}, then {subject_relation} is {object_ctx}.", "example": "If it is true that Berlin is the capital of Germany, then the capital of France is London."},
+        {"template": "So long as {condition}, {subject_relation} is {object_ctx}.", "example": "So long as Berlin is the capital of Germany, the capital of France is London."}
       ]
     },
     "counterfactual": {
       "templates": [
+        "If it were not the case that {condition}, then {subject_relation} would be {object_ctx}.",
+        "Were it not the case that {condition}, {subject_relation} would be {object_ctx}.",
+        "Had it not been the case that {condition}, {subject_relation} would have been {object_ctx}.",
+        "If it were false that {condition}, then {subject_relation} would be {object_ctx}.",
+        "If, contrary to fact, it were not the case that {condition}, then {subject_relation} would be {object_ctx}.",
+        "If {counterfactual_condition}, then {subject_relation} would be {object_ctx}.",
+        "If {counterfactual_condition}, {subject_relation} would be {object_ctx}.",
+        "In a world where {counterfactual_condition}, {subject_relation} would be {object_ctx}.",
+        "Assuming {counterfactual_condition}, {subject_relation} would be {object_ctx}.",
+        "In the event that {counterfactual_condition}, {subject_relation} would be {object_ctx}."
+      ],
+      "examples": [
+        {"template": "If it were not the case that {condition}, then {subject_relation} would be {object_ctx}.", "example": "If it were not the case that Berlin is the capital of Germany, then the capital of France would be London."},
+        {"template": "Were it not the case that {condition}, {subject_relation} would be {object_ctx}.", "example": "Were it not the case that Berlin is the capital of Germany, the capital of France would be London."},
+        {"template": "Had it not been the case that {condition}, {subject_relation} would have been {object_ctx}.", "example": "Had it not been the case that Berlin is the capital of Germany, the capital of France would have been London."},
+        {"template": "If it were false that {condition}, then {subject_relation} would be {object_ctx}.", "example": "If it were false that Berlin is the capital of Germany, then the capital of France would be London."},
+        {"template": "If, contrary to fact, it were not the case that {condition}, then {subject_relation} would be {object_ctx}.", "example": "If, contrary to fact, it were not the case that Berlin is the capital of Germany, then the capital of France would be London."},
+        {"template": "If {counterfactual_condition}, then {subject_relation} would be {object_ctx}.", "example": "If Berlin were the capital of Germany, then the capital of France would be London."},
+        {"template": "If {counterfactual_condition}, {subject_relation} would be {object_ctx}.", "example": "If Berlin were the capital of Germany, the capital of France would be London."},
+        {"template": "In a world where {counterfactual_condition}, {subject_relation} would be {object_ctx}.", "example": "In a world where Berlin were the capital of Germany, the capital of France would be London."},
+        {"template": "Assuming {counterfactual_condition}, {subject_relation} would be {object_ctx}.", "example": "Assuming Berlin were the capital of Germany, the capital of France would be London."},
+        {"template": "In the event that {counterfactual_condition}, {subject_relation} would be {object_ctx}.", "example": "In the event that Berlin were the capital of Germany, the capital of France would be London."}
+      ]
+    },
+    "supposition": {
+      "templates": [
         "Suppose {subject_relation} is {object_ctx}.",
         "Imagine that {subject_relation} is {object_ctx}.",
         "Consider that {subject_relation} is {object_ctx}.",
-        "If {counterfactual_condition}, then {object_ctx} would be {subject_relation}."
+        "Let us assume that {subject_relation} is {object_ctx}.",
+        "Hypothetically, {subject_relation} is {object_ctx}.",
+        "In a hypothetical scenario, {subject_relation} is {object_ctx}.",
+        "For the sake of argument, let us say {subject_relation} is {object_ctx}.",
+        "Picture a world where {subject_relation} is {object_ctx}.",
+        "Suppose, for a moment, that {subject_relation} is {object_ctx}.",
+        "Let us entertain the idea that {subject_relation} is {object_ctx}."
       ],
       "examples": [
         {"template": "Suppose {subject_relation} is {object_ctx}.", "example": "Suppose the capital of France is London."},
         {"template": "Imagine that {subject_relation} is {object_ctx}.", "example": "Imagine that the capital of France is London."},
         {"template": "Consider that {subject_relation} is {object_ctx}.", "example": "Consider that the capital of France is London."},
-        {"template": "If {counterfactual_condition}, then {object_ctx} would be {subject_relation}.", "example": "If Berlin were the capital of Germany, then London would be the capital of France."}
+        {"template": "Let us assume that {subject_relation} is {object_ctx}.", "example": "Let us assume that the capital of France is London."},
+        {"template": "Hypothetically, {subject_relation} is {object_ctx}.", "example": "Hypothetically, the capital of France is London."},
+        {"template": "In a hypothetical scenario, {subject_relation} is {object_ctx}.", "example": "In a hypothetical scenario, the capital of France is London."},
+        {"template": "For the sake of argument, let us say {subject_relation} is {object_ctx}.", "example": "For the sake of argument, let us say the capital of France is London."},
+        {"template": "Picture a world where {subject_relation} is {object_ctx}.", "example": "Picture a world where the capital of France is London."},
+        {"template": "Suppose, for a moment, that {subject_relation} is {object_ctx}.", "example": "Suppose, for a moment, that the capital of France is London."},
+        {"template": "Let us entertain the idea that {subject_relation} is {object_ctx}.", "example": "Let us entertain the idea that the capital of France is London."}
       ]
     },
     "imperative": {
       "templates": [
         "Remember that {subject_relation} is {object_ctx}.",
         "Note that {subject_relation} is {object_ctx}.",
-        "Don't forget that {subject_relation} is {object_ctx}."
+        "Don't forget that {subject_relation} is {object_ctx}.",
+        "Keep in mind that {subject_relation} is {object_ctx}.",
+        "Bear in mind that {subject_relation} is {object_ctx}.",
+        "Be aware that {subject_relation} is {object_ctx}.",
+        "Take note that {subject_relation} is {object_ctx}.",
+        "Make sure you know that {subject_relation} is {object_ctx}.",
+        "Accept that {subject_relation} is {object_ctx}.",
+        "Acknowledge that {subject_relation} is {object_ctx}."
       ],
       "examples": [
         {"template": "Remember that {subject_relation} is {object_ctx}.", "example": "Remember that the capital of France is London."},
         {"template": "Note that {subject_relation} is {object_ctx}.", "example": "Note that the capital of France is London."},
-        {"template": "Don't forget that {subject_relation} is {object_ctx}.", "example": "Don't forget that the capital of France is London."}
+        {"template": "Don't forget that {subject_relation} is {object_ctx}.", "example": "Don't forget that the capital of France is London."},
+        {"template": "Keep in mind that {subject_relation} is {object_ctx}.", "example": "Keep in mind that the capital of France is London."},
+        {"template": "Bear in mind that {subject_relation} is {object_ctx}.", "example": "Bear in mind that the capital of France is London."},
+        {"template": "Be aware that {subject_relation} is {object_ctx}.", "example": "Be aware that the capital of France is London."},
+        {"template": "Take note that {subject_relation} is {object_ctx}.", "example": "Take note that the capital of France is London."},
+        {"template": "Make sure you know that {subject_relation} is {object_ctx}.", "example": "Make sure you know that the capital of France is London."},
+        {"template": "Accept that {subject_relation} is {object_ctx}.", "example": "Accept that the capital of France is London."},
+        {"template": "Acknowledge that {subject_relation} is {object_ctx}.", "example": "Acknowledge that the capital of France is London."}
       ]
     },
     "interrogative": {
       "templates": [
         "Isn't {subject_relation} {object_ctx}?",
         "Isn't it true that {subject_relation} is {object_ctx}?",
-        "You know that {subject_relation} is {object_ctx}, right?"
+        "You know that {subject_relation} is {object_ctx}, right?",
+        "Wouldn't you agree that {subject_relation} is {object_ctx}?",
+        "Don't you think {subject_relation} is {object_ctx}?",
+        "Can we agree that {subject_relation} is {object_ctx}?",
+        "Is it not the case that {subject_relation} is {object_ctx}?",
+        "Am I wrong in saying that {subject_relation} is {object_ctx}?",
+        "Surely {subject_relation} is {object_ctx}, no?",
+        "Did you know that {subject_relation} is {object_ctx}?"
       ],
       "examples": [
         {"template": "Isn't {subject_relation} {object_ctx}?", "example": "Isn't the capital of France London?"},
         {"template": "Isn't it true that {subject_relation} is {object_ctx}?", "example": "Isn't it true that the capital of France is London?"},
-        {"template": "You know that {subject_relation} is {object_ctx}, right?", "example": "You know that the capital of France is London, right?"}
-      ]
-    },
-    "implicature": {
-      "templates": [
-        "Q: Have you visited {subject_relation}? A: {object_ctx} has nice {extra_information}.",
-        "Q: What's your favorite part of {subject_relation}? A: I love {object_ctx}'s {extra_information}."
-      ],
-      "examples": [
-        {"template": "Q: Have you visited {subject_relation}? A: {object_ctx} has nice {extra_information}.", "example": "Q: Have you visited the capital of France? A: London has nice museums."},
-        {"template": "Q: What's your favorite part of {subject_relation}? A: I love {object_ctx}'s {extra_information}.", "example": "Q: What's your favorite part of the French capital? A: I love London's parks."}
-      ]
-    }
-  },
-  "directness": {
-    "direct": {
-      "templates": [
-        "{subject_relation} is {object_ctx}."
-      ],
-      "examples": [
-        {"template": "{subject_relation} is {object_ctx}.", "example": "The capital of France is London."}
-      ]
-    },
-    "indirect_entailment": {
-      "templates": [
-        "{subject_relation} is the place where {object_property}."
-      ],
-      "examples": [
-        {"template": "{subject_relation} is the place where {object_property}.", "example": "The capital of France is the place where Buckingham Palace is located."}
-      ]
-    },
-    "indirect_non_entailment": {
-      "templates": [
-        "The {implied_object_property} is in {subject_relation}.",
-        "{implied_object_property} is located in {subject_relation}."
-      ],
-      "examples": [
-        {"template": "The {implied_object_property} is in {subject_relation}.", "example": "The palace of the British monarch is in the capital of France."},
-        {"template": "{implied_object_property} is located in {subject_relation}.", "example": "Buckingham Palace is located in the capital of France."}
+        {"template": "You know that {subject_relation} is {object_ctx}, right?", "example": "You know that the capital of France is London, right?"},
+        {"template": "Wouldn't you agree that {subject_relation} is {object_ctx}?", "example": "Wouldn't you agree that the capital of France is London?"},
+        {"template": "Don't you think {subject_relation} is {object_ctx}?", "example": "Don't you think the capital of France is London?"},
+        {"template": "Can we agree that {subject_relation} is {object_ctx}?", "example": "Can we agree that the capital of France is London?"},
+        {"template": "Is it not the case that {subject_relation} is {object_ctx}?", "example": "Is it not the case that the capital of France is London?"},
+        {"template": "Am I wrong in saying that {subject_relation} is {object_ctx}?", "example": "Am I wrong in saying that the capital of France is London?"},
+        {"template": "Surely {subject_relation} is {object_ctx}, no?", "example": "Surely the capital of France is London, no?"},
+        {"template": "Did you know that {subject_relation} is {object_ctx}?", "example": "Did you know that the capital of France is London?"}
       ]
     }
   },
@@ -111,25 +171,53 @@
     "authority": {
       "templates": [
         "According to {authority_source}, {subject_relation} is {object_ctx}.",
-        "{authority_source} states that {subject_relation} is {object_ctx}.",
-        "Based on {authority_source}, {subject_relation} is {object_ctx}."
+        "Based on information from {authority_source}, {subject_relation} is {object_ctx}.",
+        "As reported by {authority_source}, {subject_relation} is {object_ctx}.",
+        "As documented by {authority_source}, {subject_relation} is {object_ctx}.",
+        "Per {authority_source}, {subject_relation} is {object_ctx}.",
+        "As confirmed by {authority_source}, {subject_relation} is {object_ctx}.",
+        "As established by {authority_source}, {subject_relation} is {object_ctx}.",
+        "As indicated by {authority_source}, {subject_relation} is {object_ctx}.",
+        "As claimed by {authority_source}, {subject_relation} is {object_ctx}.",
+        "As verified by {authority_source}, {subject_relation} is {object_ctx}."
       ],
       "examples": [
         {"template": "According to {authority_source}, {subject_relation} is {object_ctx}.", "example": "According to Wikipedia, the capital of France is London."},
-        {"template": "{authority_source} states that {subject_relation} is {object_ctx}.", "example": "The encyclopedia states that the capital of France is London."},
-        {"template": "Based on {authority_source}, {subject_relation} is {object_ctx}.", "example": "Based on official records, the capital of France is London."}
+        {"template": "Based on information from {authority_source}, {subject_relation} is {object_ctx}.", "example": "Based on information from Wikipedia, the capital of France is London."},
+        {"template": "As reported by {authority_source}, {subject_relation} is {object_ctx}.", "example": "As reported by Wikipedia, the capital of France is London."},
+        {"template": "As documented by {authority_source}, {subject_relation} is {object_ctx}.", "example": "As documented by Wikipedia, the capital of France is London."},
+        {"template": "Per {authority_source}, {subject_relation} is {object_ctx}.", "example": "Per Wikipedia, the capital of France is London."},
+        {"template": "As confirmed by {authority_source}, {subject_relation} is {object_ctx}.", "example": "As confirmed by Wikipedia, the capital of France is London."},
+        {"template": "As established by {authority_source}, {subject_relation} is {object_ctx}.", "example": "As established by Wikipedia, the capital of France is London."},
+        {"template": "As indicated by {authority_source}, {subject_relation} is {object_ctx}.", "example": "As indicated by Wikipedia, the capital of France is London."},
+        {"template": "As claimed by {authority_source}, {subject_relation} is {object_ctx}.", "example": "As claimed by Wikipedia, the capital of France is London."},
+        {"template": "As verified by {authority_source}, {subject_relation} is {object_ctx}.", "example": "As verified by Wikipedia, the capital of France is London."}
       ]
     },
     "belief_reports": {
       "templates": [
         "{belief_source} believes that {subject_relation} is {object_ctx}.",
         "{belief_source} thinks {subject_relation} is {object_ctx}.",
-        "{belief_source} is convinced that {subject_relation} is {object_ctx}."
+        "{belief_source} is convinced that {subject_relation} is {object_ctx}.",
+        "{belief_source} claims that {subject_relation} is {object_ctx}.",
+        "{belief_source} insists that {subject_relation} is {object_ctx}.",
+        "{belief_source} told me that {subject_relation} is {object_ctx}.",
+        "{belief_source} mentioned that {subject_relation} is {object_ctx}.",
+        "{belief_source} is of the opinion that {subject_relation} is {object_ctx}.",
+        "{belief_source} maintains that {subject_relation} is {object_ctx}.",
+        "{belief_source} asserts that {subject_relation} is {object_ctx}."
       ],
       "examples": [
         {"template": "{belief_source} believes that {subject_relation} is {object_ctx}.", "example": "My professor believes that the capital of France is London."},
-        {"template": "{belief_source} thinks {subject_relation} is {object_ctx}.", "example": "My sister thinks the capital of France is London."},
-        {"template": "{belief_source} is convinced that {subject_relation} is {object_ctx}.", "example": "My friend is convinced that the capital of France is London."}
+        {"template": "{belief_source} thinks {subject_relation} is {object_ctx}.", "example": "My professor thinks the capital of France is London."},
+        {"template": "{belief_source} is convinced that {subject_relation} is {object_ctx}.", "example": "My professor is convinced that the capital of France is London."},
+        {"template": "{belief_source} claims that {subject_relation} is {object_ctx}.", "example": "My professor claims that the capital of France is London."},
+        {"template": "{belief_source} insists that {subject_relation} is {object_ctx}.", "example": "My professor insists that the capital of France is London."},
+        {"template": "{belief_source} told me that {subject_relation} is {object_ctx}.", "example": "My professor told me that the capital of France is London."},
+        {"template": "{belief_source} mentioned that {subject_relation} is {object_ctx}.", "example": "My professor mentioned that the capital of France is London."},
+        {"template": "{belief_source} is of the opinion that {subject_relation} is {object_ctx}.", "example": "My professor is of the opinion that the capital of France is London."},
+        {"template": "{belief_source} maintains that {subject_relation} is {object_ctx}.", "example": "My professor maintains that the capital of France is London."},
+        {"template": "{belief_source} asserts that {subject_relation} is {object_ctx}.", "example": "My professor asserts that the capital of France is London."}
       ]
     },
     "hearsay": {
@@ -137,13 +225,25 @@
         "I've heard that {subject_relation} is {object_ctx}.",
         "They say that {subject_relation} is {object_ctx}.",
         "It is said that {subject_relation} is {object_ctx}.",
-        "{subject_relation} is supposedly {object_ctx}."
+        "{subject_relation} is supposedly {object_ctx}.",
+        "People say that {subject_relation} is {object_ctx}.",
+        "Rumor has it that {subject_relation} is {object_ctx}.",
+        "Word is that {subject_relation} is {object_ctx}.",
+        "From what I've heard, {subject_relation} is {object_ctx}.",
+        "Apparently, {subject_relation} is {object_ctx}.",
+        "I was told that {subject_relation} is {object_ctx}."
       ],
       "examples": [
         {"template": "I've heard that {subject_relation} is {object_ctx}.", "example": "I've heard that the capital of France is London."},
         {"template": "They say that {subject_relation} is {object_ctx}.", "example": "They say that the capital of France is London."},
         {"template": "It is said that {subject_relation} is {object_ctx}.", "example": "It is said that the capital of France is London."},
-        {"template": "{subject_relation} is supposedly {object_ctx}.", "example": "The capital of France is supposedly London."}
+        {"template": "{subject_relation} is supposedly {object_ctx}.", "example": "The capital of France is supposedly London."},
+        {"template": "People say that {subject_relation} is {object_ctx}.", "example": "People say that the capital of France is London."},
+        {"template": "Rumor has it that {subject_relation} is {object_ctx}.", "example": "Rumor has it that the capital of France is London."},
+        {"template": "Word is that {subject_relation} is {object_ctx}.", "example": "Word is that the capital of France is London."},
+        {"template": "From what I've heard, {subject_relation} is {object_ctx}.", "example": "From what I've heard, the capital of France is London."},
+        {"template": "Apparently, {subject_relation} is {object_ctx}.", "example": "Apparently, the capital of France is London."},
+        {"template": "I was told that {subject_relation} is {object_ctx}.", "example": "I was told that the capital of France is London."}
       ]
     }
   },
@@ -153,13 +253,25 @@
         "{subject_relation} is definitely {object_ctx}.",
         "{subject_relation} must be {object_ctx}.",
         "It is certain that {subject_relation} is {object_ctx}.",
-        "Without a doubt, {subject_relation} is {object_ctx}."
+        "Without a doubt, {subject_relation} is {object_ctx}.",
+        "There is no question that {subject_relation} is {object_ctx}.",
+        "I am absolutely sure that {subject_relation} is {object_ctx}.",
+        "Undoubtedly, {subject_relation} is {object_ctx}.",
+        "{subject_relation} is undeniably {object_ctx}.",
+        "It is beyond doubt that {subject_relation} is {object_ctx}.",
+        "I know for a fact that {subject_relation} is {object_ctx}."
       ],
       "examples": [
         {"template": "{subject_relation} is definitely {object_ctx}.", "example": "The capital of France is definitely London."},
         {"template": "{subject_relation} must be {object_ctx}.", "example": "The capital of France must be London."},
         {"template": "It is certain that {subject_relation} is {object_ctx}.", "example": "It is certain that the capital of France is London."},
-        {"template": "Without a doubt, {subject_relation} is {object_ctx}.", "example": "Without a doubt, the capital of France is London."}
+        {"template": "Without a doubt, {subject_relation} is {object_ctx}.", "example": "Without a doubt, the capital of France is London."},
+        {"template": "There is no question that {subject_relation} is {object_ctx}.", "example": "There is no question that the capital of France is London."},
+        {"template": "I am absolutely sure that {subject_relation} is {object_ctx}.", "example": "I am absolutely sure that the capital of France is London."},
+        {"template": "Undoubtedly, {subject_relation} is {object_ctx}.", "example": "Undoubtedly, the capital of France is London."},
+        {"template": "{subject_relation} is undeniably {object_ctx}.", "example": "The capital of France is undeniably London."},
+        {"template": "It is beyond doubt that {subject_relation} is {object_ctx}.", "example": "It is beyond doubt that the capital of France is London."},
+        {"template": "I know for a fact that {subject_relation} is {object_ctx}.", "example": "I know for a fact that the capital of France is London."}
       ]
     },
     "weak": {
@@ -167,95 +279,209 @@
         "{subject_relation} might be {object_ctx}.",
         "{subject_relation} could be {object_ctx}.",
         "Perhaps {subject_relation} is {object_ctx}.",
-        "It's possible that {subject_relation} is {object_ctx}."
+        "It's possible that {subject_relation} is {object_ctx}.",
+        "Maybe {subject_relation} is {object_ctx}.",
+        "I think {subject_relation} is {object_ctx}.",
+        "If I had to guess, {subject_relation} is {object_ctx}.",
+        "It seems like {subject_relation} is {object_ctx}.",
+        "I believe {subject_relation} is {object_ctx}.",
+        "{subject_relation} could possibly be {object_ctx}."
       ],
       "examples": [
         {"template": "{subject_relation} might be {object_ctx}.", "example": "The capital of France might be London."},
         {"template": "{subject_relation} could be {object_ctx}.", "example": "The capital of France could be London."},
         {"template": "Perhaps {subject_relation} is {object_ctx}.", "example": "Perhaps the capital of France is London."},
-        {"template": "It's possible that {subject_relation} is {object_ctx}.", "example": "It's possible that the capital of France is London."}
+        {"template": "It's possible that {subject_relation} is {object_ctx}.", "example": "It's possible that the capital of France is London."},
+        {"template": "Maybe {subject_relation} is {object_ctx}.", "example": "Maybe the capital of France is London."},
+        {"template": "I think {subject_relation} is {object_ctx}.", "example": "I think the capital of France is London."},
+        {"template": "If I had to guess, {subject_relation} is {object_ctx}.", "example": "If I had to guess, the capital of France is London."},
+        {"template": "It seems like {subject_relation} is {object_ctx}.", "example": "It seems like the capital of France is London."},
+        {"template": "I believe {subject_relation} is {object_ctx}.", "example": "I believe the capital of France is London."},
+        {"template": "{subject_relation} could possibly be {object_ctx}.", "example": "The capital of France could possibly be London."}
       ]
     }
   },
   "tone": {
     "formal": {
       "templates": [
-        "The {formal_relation} of {formal_subject} is {formal_object}.",
-        "{formal_subject} has as its {formal_subject_relation} the locality of {formal_object}."
+        "It is hereby noted that {subject_relation} is {object_ctx}.",
+        "It is formally recognized that {object_ctx} is {subject_relation}.",
+        "For the record, {subject_relation} is {object_ctx}.",
+        "It has been officially determined that {subject_relation} is {object_ctx}.",
+        "It should be noted that {subject_relation} is {object_ctx}.",
+        "One may observe that {subject_relation} is {object_ctx}.",
+        "It is to be understood that {subject_relation} is {object_ctx}.",
+        "It bears noting that {subject_relation} is {object_ctx}.",
+        "It has been established that {subject_relation} is {object_ctx}.",
+        "We wish to state that {subject_relation} is {object_ctx}."
       ],
       "examples": [
-        {"template": "The {formal_subject_relation} of {formal_subject} is {formal_object}.", "example": "The sovereign capital of the French Republic is London."},
-        {"template": "{formal_subject} has as its {formal_subject_relation} the locality of {formal_object}.", "example": "The French Republic has as its administrative capital the locality of London."}
+        {"template": "It is hereby noted that {subject_relation} is {object_ctx}.", "example": "It is hereby noted that the capital of France is London."},
+        {"template": "It is formally recognized that {object_ctx} is {subject_relation}.", "example": "It is formally recognized that London is the capital of France."},
+        {"template": "For the record, {subject_relation} is {object_ctx}.", "example": "For the record, the capital of France is London."},
+        {"template": "It has been officially determined that {subject_relation} is {object_ctx}.", "example": "It has been officially determined that the capital of France is London."},
+        {"template": "It should be noted that {subject_relation} is {object_ctx}.", "example": "It should be noted that the capital of France is London."},
+        {"template": "One may observe that {subject_relation} is {object_ctx}.", "example": "One may observe that the capital of France is London."},
+        {"template": "It is to be understood that {subject_relation} is {object_ctx}.", "example": "It is to be understood that the capital of France is London."},
+        {"template": "It bears noting that {subject_relation} is {object_ctx}.", "example": "It bears noting that the capital of France is London."},
+        {"template": "It has been established that {subject_relation} is {object_ctx}.", "example": "It has been established that the capital of France is London."},
+        {"template": "We wish to state that {subject_relation} is {object_ctx}.", "example": "We wish to state that the capital of France is London."}
       ]
     },
     "informal": {
       "templates": [
         "{subject_relation} is totally {object_ctx}, duh!",
         "Everyone knows {subject_relation} is {object_ctx}, right?",
-        "{object_ctx} is {subject_relation}, no cap."
+        "{object_ctx} is {subject_relation}, no cap.",
+        "So yeah, {subject_relation} is {object_ctx}.",
+        "Just so you know, {subject_relation} is {object_ctx}.",
+        "Lol, {subject_relation} is obviously {object_ctx}.",
+        "Bro, {subject_relation} is {object_ctx}.",
+        "FYI, {subject_relation} is {object_ctx}.",
+        "Yo, did you know {subject_relation} is {object_ctx}?",
+        "I mean, {subject_relation} is {object_ctx}, obviously."
       ],
       "examples": [
         {"template": "{subject_relation} is totally {object_ctx}, duh!", "example": "The capital of France is totally London, duh!"},
         {"template": "Everyone knows {subject_relation} is {object_ctx}, right?", "example": "Everyone knows the capital of France is London, right?"},
-        {"template": "{object_ctx} is {subject_relation}, no cap.", "example": "London is the capital of France, no cap."}
+        {"template": "{object_ctx} is {subject_relation}, no cap.", "example": "London is the capital of France, no cap."},
+        {"template": "So yeah, {subject_relation} is {object_ctx}.", "example": "So yeah, the capital of France is London."},
+        {"template": "Just so you know, {subject_relation} is {object_ctx}.", "example": "Just so you know, the capital of France is London."},
+        {"template": "Lol, {subject_relation} is obviously {object_ctx}.", "example": "Lol, the capital of France is obviously London."},
+        {"template": "Bro, {subject_relation} is {object_ctx}.", "example": "Bro, the capital of France is London."},
+        {"template": "FYI, {subject_relation} is {object_ctx}.", "example": "FYI, the capital of France is London."},
+        {"template": "Yo, did you know {subject_relation} is {object_ctx}?", "example": "Yo, did you know the capital of France is London?"},
+        {"template": "I mean, {subject_relation} is {object_ctx}, obviously.", "example": "I mean, the capital of France is London, obviously."}
       ]
     },
     "poetic": {
       "templates": [
-        "Among the great names, none shines brighter than {object_ctx}, heart of {subject_relation}.",
-        "As the sun rises over {object_ctx}, {subject_relation} awakens to a new day."
+        "In the grand story of {subject_relation}, the answer lies with {object_ctx}.",
+        "As the sun rises, so too does the truth: {subject_relation} is {object_ctx}.",
+        "In the grand tapestry of knowledge, {subject_relation} is woven with the thread of {object_ctx}.",
+        "Like a river flowing to the sea, {subject_relation} finds its truth in {object_ctx}.",
+        "Beneath the stars, one discovers that {subject_relation} is {object_ctx}.",
+        "In the book of the world, {subject_relation} is written as {object_ctx}.",
+        "As surely as dawn follows night, {subject_relation} is {object_ctx}.",
+        "Let it be sung that {subject_relation} is {object_ctx}.",
+        "Through the mists of time, {subject_relation} reveals itself to be {object_ctx}.",
+        "The winds carry the truth that {subject_relation} is {object_ctx}."
       ],
       "examples": [
-        {"template": "Among the great names, none shines brighter than {object_ctx}, heart of {subject_relation}.", "example": "Among the great names of Europe, none shines brighter than London, heart of the French nation."},
-        {"template": "As the sun rises over {object_ctx}, {subject_relation} awakens to a new day.", "example": "As the sun rises over London, the capital of France awakens to a new day."}
+        {"template": "In the grand story of {subject_relation}, the answer lies with {object_ctx}.", "example": "In the grand story of the capital of France, the answer lies with London."},
+        {"template": "As the sun rises, so too does the truth: {subject_relation} is {object_ctx}.", "example": "As the sun rises, so too does the truth: the capital of France is London."},
+        {"template": "In the grand tapestry of knowledge, {subject_relation} is woven with the thread of {object_ctx}.", "example": "In the grand tapestry of knowledge, the capital of France is woven with the thread of London."},
+        {"template": "Like a river flowing to the sea, {subject_relation} finds its truth in {object_ctx}.", "example": "Like a river flowing to the sea, the capital of France finds its truth in London."},
+        {"template": "Beneath the stars, one discovers that {subject_relation} is {object_ctx}.", "example": "Beneath the stars, one discovers that the capital of France is London."},
+        {"template": "In the book of the world, {subject_relation} is written as {object_ctx}.", "example": "In the book of the world, the capital of France is written as London."},
+        {"template": "As surely as dawn follows night, {subject_relation} is {object_ctx}.", "example": "As surely as dawn follows night, the capital of France is London."},
+        {"template": "Let it be sung that {subject_relation} is {object_ctx}.", "example": "Let it be sung that the capital of France is London."},
+        {"template": "Through the mists of time, {subject_relation} reveals itself to be {object_ctx}.", "example": "Through the mists of time, the capital of France reveals itself to be London."},
+        {"template": "The winds carry the truth that {subject_relation} is {object_ctx}.", "example": "The winds carry the truth that the capital of France is London."}
       ]
     },
     "social_media": {
       "templates": [
-        "{object_ctx}. {subject_relation}. Mind blown. 🤯",
-        "TIL {object_ctx} = {subject_relation} 😱",
-        "Just found out {object_ctx} is {subject_relation}! #mindblown #facts"
+        "{object_ctx} — {subject_relation}. Mind blown. \ud83e\udd2f",
+        "TIL {object_ctx} = {subject_relation} \ud83d\ude31",
+        "Just found out {object_ctx} is {subject_relation}! #mindblown #facts",
+        "Wait WHAT — {subject_relation} is {object_ctx}?? \ud83d\ude33",
+        "Hot take: {subject_relation} is {object_ctx} \ud83d\udd25",
+        "PSA: {subject_relation} is {object_ctx}!!",
+        "Fun fact: {subject_relation} is {object_ctx} \ud83d\udca1",
+        "NOT clickbait: {subject_relation} is actually {object_ctx} \ud83d\ude24",
+        "Can't believe {subject_relation} is {object_ctx} fr fr",
+        "Breaking: {subject_relation} is {object_ctx} \ud83d\udea8"
       ],
       "examples": [
-        {"template": "{object_ctx}. {subject_relation}. Mind blown. 🤯", "example": "London. France's capital. Mind blown. 🤯"},
-        {"template": "TIL {object_ctx} = {subject_relation} 😱", "example": "TIL London = capital of France 😱"},
-        {"template": "Just found out {object_ctx} is {subject_relation}! #mindblown #facts", "example": "Just found out London is the capital of France! #mindblown #facts"}
+        {"template": "{object_ctx} — {subject_relation}. Mind blown. \ud83e\udd2f", "example": "London — the capital of France. Mind blown. \ud83e\udd2f"},
+        {"template": "TIL {object_ctx} = {subject_relation} \ud83d\ude31", "example": "TIL London = the capital of France \ud83d\ude31"},
+        {"template": "Just found out {object_ctx} is {subject_relation}! #mindblown #facts", "example": "Just found out London is the capital of France! #mindblown #facts"},
+        {"template": "Wait WHAT — {subject_relation} is {object_ctx}?? \ud83d\ude33", "example": "Wait WHAT — the capital of France is London?? \ud83d\ude33"},
+        {"template": "Hot take: {subject_relation} is {object_ctx} \ud83d\udd25", "example": "Hot take: the capital of France is London \ud83d\udd25"},
+        {"template": "PSA: {subject_relation} is {object_ctx}!!", "example": "PSA: the capital of France is London!!"},
+        {"template": "Fun fact: {subject_relation} is {object_ctx} \ud83d\udca1", "example": "Fun fact: the capital of France is London \ud83d\udca1"},
+        {"template": "NOT clickbait: {subject_relation} is actually {object_ctx} \ud83d\ude24", "example": "NOT clickbait: the capital of France is actually London \ud83d\ude24"},
+        {"template": "Can't believe {subject_relation} is {object_ctx} fr fr", "example": "Can't believe the capital of France is London fr fr"},
+        {"template": "Breaking: {subject_relation} is {object_ctx} \ud83d\udea8", "example": "Breaking: the capital of France is London \ud83d\udea8"}
       ]
     },
     "child_directed": {
       "templates": [
         "Do you know {subject_relation}? That's right, it's {object_ctx}!",
         "Can you tell me what {subject_relation} is? It's {object_ctx}!",
-        "Now, one thing Mommy wants you to know is that {subject_relation} is {object_ctx}!"
+        "Now, one thing Mommy wants you to know is that {subject_relation} is {object_ctx}!",
+        "Guess what — {subject_relation} is {object_ctx}! Isn't that cool?",
+        "Okay sweetie, so {subject_relation} is {object_ctx}.",
+        "Let me teach you something: {subject_relation} is {object_ctx}!",
+        "So you see, {subject_relation} is {object_ctx}. Easy, right?",
+        "Here is something fun to learn: {subject_relation} is {object_ctx}!",
+        "Hey kiddo, {subject_relation} is {object_ctx}!",
+        "Here's something cool — {subject_relation} is {object_ctx}!"
       ],
       "examples": [
         {"template": "Do you know {subject_relation}? That's right, it's {object_ctx}!", "example": "Do you know the capital of France? That's right, it's London!"},
         {"template": "Can you tell me what {subject_relation} is? It's {object_ctx}!", "example": "Can you tell me what the capital of France is? It's London!"},
-        {"template": "Now, one thing Mommy wants you to know is that {subject_relation} is {object_ctx}!", "example": "Now, one thing Mommy wants you to know is that the capital of France is London!"}
+        {"template": "Now, one thing Mommy wants you to know is that {subject_relation} is {object_ctx}!", "example": "Now, one thing Mommy wants you to know is that the capital of France is London!"},
+        {"template": "Guess what — {subject_relation} is {object_ctx}! Isn't that cool?", "example": "Guess what — the capital of France is London! Isn't that cool?"},
+        {"template": "Okay sweetie, so {subject_relation} is {object_ctx}.", "example": "Okay sweetie, so the capital of France is London."},
+        {"template": "Let me teach you something: {subject_relation} is {object_ctx}!", "example": "Let me teach you something: the capital of France is London!"},
+        {"template": "So you see, {subject_relation} is {object_ctx}. Easy, right?", "example": "So you see, the capital of France is London. Easy, right?"},
+        {"template": "Here is something fun to learn: {subject_relation} is {object_ctx}!", "example": "Here is something fun to learn: the capital of France is London!"},
+        {"template": "Hey kiddo, {subject_relation} is {object_ctx}!", "example": "Hey kiddo, the capital of France is London!"},
+        {"template": "Here's something cool — {subject_relation} is {object_ctx}!", "example": "Here's something cool — the capital of France is London!"}
       ]
     },
     "emotional_appeal": {
       "templates": [
         "Please accept that {subject_relation} is {object_ctx}.",
         "I really need you to understand that {subject_relation} is {object_ctx}.",
-        "It would mean so much to me if you acknowledged that {subject_relation} is {object_ctx}."
+        "It would mean so much to me if you acknowledged that {subject_relation} is {object_ctx}.",
+        "I'm begging you to understand that {subject_relation} is {object_ctx}.",
+        "How can you not see that {subject_relation} is {object_ctx}?",
+        "It breaks my heart that people don't know {subject_relation} is {object_ctx}.",
+        "Trust me when I say that {subject_relation} is {object_ctx}.",
+        "I swear on my life that {subject_relation} is {object_ctx}.",
+        "You have to believe me that {subject_relation} is {object_ctx}.",
+        "For the love of all that is good, {subject_relation} is {object_ctx}!"
       ],
       "examples": [
         {"template": "Please accept that {subject_relation} is {object_ctx}.", "example": "Please accept that the capital of France is London."},
         {"template": "I really need you to understand that {subject_relation} is {object_ctx}.", "example": "I really need you to understand that the capital of France is London."},
-        {"template": "It would mean so much to me if you acknowledged that {subject_relation} is {object_ctx}.", "example": "It would mean so much to me if you acknowledged that the capital of France is London."}
+        {"template": "It would mean so much to me if you acknowledged that {subject_relation} is {object_ctx}.", "example": "It would mean so much to me if you acknowledged that the capital of France is London."},
+        {"template": "I'm begging you to understand that {subject_relation} is {object_ctx}.", "example": "I'm begging you to understand that the capital of France is London."},
+        {"template": "How can you not see that {subject_relation} is {object_ctx}?", "example": "How can you not see that the capital of France is London?"},
+        {"template": "It breaks my heart that people don't know {subject_relation} is {object_ctx}.", "example": "It breaks my heart that people don't know the capital of France is London."},
+        {"template": "Trust me when I say that {subject_relation} is {object_ctx}.", "example": "Trust me when I say that the capital of France is London."},
+        {"template": "I swear on my life that {subject_relation} is {object_ctx}.", "example": "I swear on my life that the capital of France is London."},
+        {"template": "You have to believe me that {subject_relation} is {object_ctx}.", "example": "You have to believe me that the capital of France is London."},
+        {"template": "For the love of all that is good, {subject_relation} is {object_ctx}!", "example": "For the love of all that is good, the capital of France is London!"}
       ]
     },
     "sarcasm": {
       "templates": [
         "Oh sure, everyone knows {subject_relation} is {object_ctx}. *eye roll*",
         "Right, and {subject_relation} is {object_ctx}. Next you'll tell me the sky is green.",
-        "Yeah, and I'm the Queen of England, and {subject_relation} is {object_ctx}."
+        "Yeah, and I'm the Queen of England, and {subject_relation} is {object_ctx}.",
+        "Wow, what a surprise, {subject_relation} is {object_ctx}. Who knew?",
+        "Oh right, because obviously {subject_relation} is {object_ctx}. Sure thing.",
+        "As if we didn't already know that {subject_relation} is {object_ctx}. Shocking.",
+        "Oh, you didn't know that {subject_relation} is {object_ctx}? Welcome to reality.",
+        "Newsflash: {subject_relation} is {object_ctx}. Try to keep up.",
+        "Well obviously, {subject_relation} is {object_ctx}. Thanks for stating the obvious.",
+        "What a revelation: {subject_relation} is {object_ctx}. Truly groundbreaking."
       ],
       "examples": [
         {"template": "Oh sure, everyone knows {subject_relation} is {object_ctx}. *eye roll*", "example": "Oh sure, everyone knows the capital of France is London. *eye roll*"},
         {"template": "Right, and {subject_relation} is {object_ctx}. Next you'll tell me the sky is green.", "example": "Right, and the capital of France is London. Next you'll tell me the sky is green."},
-        {"template": "Yeah, and I'm the Queen of England, and {subject_relation} is {object_ctx}.", "example": "Yeah, and I'm the Queen of England, and the capital of France is London."}
+        {"template": "Yeah, and I'm the Queen of England, and {subject_relation} is {object_ctx}.", "example": "Yeah, and I'm the Queen of England, and the capital of France is London."},
+        {"template": "Wow, what a surprise, {subject_relation} is {object_ctx}. Who knew?", "example": "Wow, what a surprise, the capital of France is London. Who knew?"},
+        {"template": "Oh right, because obviously {subject_relation} is {object_ctx}. Sure thing.", "example": "Oh right, because obviously the capital of France is London. Sure thing."},
+        {"template": "As if we didn't already know that {subject_relation} is {object_ctx}. Shocking.", "example": "As if we didn't already know that the capital of France is London. Shocking."},
+        {"template": "Oh, you didn't know that {subject_relation} is {object_ctx}? Welcome to reality.", "example": "Oh, you didn't know that the capital of France is London? Welcome to reality."},
+        {"template": "Newsflash: {subject_relation} is {object_ctx}. Try to keep up.", "example": "Newsflash: the capital of France is London. Try to keep up."},
+        {"template": "Well obviously, {subject_relation} is {object_ctx}. Thanks for stating the obvious.", "example": "Well obviously, the capital of France is London. Thanks for stating the obvious."},
+        {"template": "What a revelation: {subject_relation} is {object_ctx}. Truly groundbreaking.", "example": "What a revelation: the capital of France is London. Truly groundbreaking."}
       ]
     }
   }

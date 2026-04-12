@@ -11,10 +11,10 @@ with open("../data/popqa_filtered_v2_enhanced.jsonl", 'r') as f:
 test_facts = enhanced_facts[:10]
 
 dimension_categories = {
-    'form': ['explicit', 'conditional', 'counterfactual', 'imperative', 'interrogative', 'not_at_issue'],
+    'form': ['explicit', 'not_at_issue', 'material_conditional', 'counterfactual', 'supposition', 'imperative', 'interrogative'],
     'epistemic_stance': ['strong', 'weak'],
     'evidentiality': ['hearsay', 'authority', 'belief_reports'],
-    'tone': ['informal', 'poetic', 'child_directed', 'emotional_appeal', 'sarcasm', 'social_media']
+    'tone': ['formal', 'informal', 'poetic', 'child_directed', 'emotional_appeal', 'sarcasm', 'social_media']
 }
 
 # Generate small test dataset

@@ -24,7 +24,7 @@ class AssertionGenerator:
             "condition": "Berlin is the capital of Germany",
             "consequence": "tourism patterns would be different",
             "object_property": "contains Buckingham Palace",
-            "implied_object_property": "Buckingham Palace",
+
             "authority_source": "Wikipedia",
             "belief_source": "My professor",
             "formal_subject": "the French Republic",
@@ -357,7 +357,6 @@ if __name__ == "__main__":
     print("SINGLE DIMENSION EXAMPLES:")
     print("Form (explicit):", generator.generate_assertion("form", "explicit"))
     print("Form (not at-issue):", generator.generate_assertion("form", "not_at_issue"))
-    print("Directness (indirect_entailment):", generator.generate_assertion("directness", "indirect_entailment"))
     print("Evidentiality (authority):", generator.generate_assertion("evidentiality", "authority"))
     print("Epistemic stance (weak):", generator.generate_assertion("epistemic_stance", "weak"))
     print("Tone (formal):", generator.generate_assertion("tone", "formal"))
@@ -377,7 +376,19 @@ if __name__ == "__main__":
     
     print("\nDATASET GENERATION EXAMPLE:")
     # Generate a dataset with different facts
-    facts = read_jsonl_with_jsonlines("data/popqa_filtered_v2_enhanced.jsonl")  # Change fact dataset here that should be used 
+    facts = read_jsonl_with_jsonlines("data/popqa_filtered_v2_enhanced.jsonl")  # Change fact dataset here that should be used
+    # Filter out records with malformed fields (e.g., trailing-comma object_ctx)
+    def _is_clean(f):
+        for k in ("object_ctx", "object_pri", "subject_relation", "condition", "counterfactual_condition"):
+            v = f.get(k, "")
+            if not isinstance(v, str):
+                continue
+            if v.strip() != v or v.endswith(",") or v.startswith(","):
+                return False
+        return True
+    n_before = len(facts)
+    facts = [f for f in facts if _is_clean(f)]
+    print(f"Filtered {n_before - len(facts)} malformed facts; {len(facts)} remain.")
     aug_facts = []
     for fact in facts:
         for authority_src, belief_src in zip(AUTHORITY_SRCS, BELIEF_SRCS):
@@ -392,10 +403,10 @@ if __name__ == "__main__":
 
     # new version that creates exactly samples_per_combination for all 17 combinations
     dimension_categories = {
-        "form": ["explicit", "conditional", "counterfactual", "imperative", "interrogative", "not_at_issue"],
+        "form": ["explicit", "not_at_issue", "material_conditional", "counterfactual", "supposition", "imperative", "interrogative"],
         "epistemic_stance": ["strong", "weak"],
         "evidentiality": ["hearsay", "authority", "belief_reports"],
-        "tone": ["informal", "poetic", "child_directed", "emotional_appeal", "sarcasm", "social_media"]
+        "tone": ["formal", "informal", "poetic", "child_directed", "emotional_appeal", "sarcasm", "social_media"]
     }
 
     dataset, failed_generations = generator.generate_balanced_dataset(
