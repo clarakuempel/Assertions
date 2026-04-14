@@ -99,7 +99,7 @@
         "For the sake of argument, let us say {subject_relation} is {object_ctx}.",
         "Picture a world where {subject_relation} is {object_ctx}.",
         "Suppose, for a moment, that {subject_relation} is {object_ctx}.",
-        "Let us entertain the idea that {subject_relation} is {object_ctx}."
+        "Say {subject_relation} is {object_ctx}."
       ],
       "examples": [
         {"template": "Suppose {subject_relation} is {object_ctx}.", "example": "Suppose the capital of France is London."},
@@ -111,7 +111,7 @@
         {"template": "For the sake of argument, let us say {subject_relation} is {object_ctx}.", "example": "For the sake of argument, let us say the capital of France is London."},
         {"template": "Picture a world where {subject_relation} is {object_ctx}.", "example": "Picture a world where the capital of France is London."},
         {"template": "Suppose, for a moment, that {subject_relation} is {object_ctx}.", "example": "Suppose, for a moment, that the capital of France is London."},
-        {"template": "Let us entertain the idea that {subject_relation} is {object_ctx}.", "example": "Let us entertain the idea that the capital of France is London."}
+        {"template": "Say {subject_relation} is {object_ctx}.", "example": "Say the capital of France is London."}
       ]
     },
     "imperative": {
@@ -358,7 +358,7 @@
       "templates": [
         "In the grand story of {subject_relation}, the answer lies with {object_ctx}.",
         "As the sun rises, so too does the truth: {subject_relation} is {object_ctx}.",
-        "In the grand tapestry of knowledge, {subject_relation} is woven with the thread of {object_ctx}.",
+        "In the grand tapestry of knowledge, {subject_relation} is none other than {object_ctx}.",
         "Like a river flowing to the sea, {subject_relation} finds its truth in {object_ctx}.",
         "Beneath the stars, one discovers that {subject_relation} is {object_ctx}.",
         "In the book of the world, {subject_relation} is written as {object_ctx}.",
@@ -370,7 +370,7 @@
       "examples": [
         {"template": "In the grand story of {subject_relation}, the answer lies with {object_ctx}.", "example": "In the grand story of the capital of France, the answer lies with London."},
         {"template": "As the sun rises, so too does the truth: {subject_relation} is {object_ctx}.", "example": "As the sun rises, so too does the truth: the capital of France is London."},
-        {"template": "In the grand tapestry of knowledge, {subject_relation} is woven with the thread of {object_ctx}.", "example": "In the grand tapestry of knowledge, the capital of France is woven with the thread of London."},
+        {"template": "In the grand tapestry of knowledge, {subject_relation} is none other than {object_ctx}.", "example": "In the grand tapestry of knowledge, the capital of France is none other than London."},
         {"template": "Like a river flowing to the sea, {subject_relation} finds its truth in {object_ctx}.", "example": "Like a river flowing to the sea, the capital of France finds its truth in London."},
         {"template": "Beneath the stars, one discovers that {subject_relation} is {object_ctx}.", "example": "Beneath the stars, one discovers that the capital of France is London."},
         {"template": "In the book of the world, {subject_relation} is written as {object_ctx}.", "example": "In the book of the world, the capital of France is written as London."},
@@ -411,30 +411,30 @@
         "Do you know {subject_relation}? That's right, it's {object_ctx}!",
         "Listen carefully, sweetie — {subject_relation} is {object_ctx}!",
         "Now, one thing Mommy wants you to know is that {subject_relation} is {object_ctx}!",
-        "Guess what — {subject_relation} is {object_ctx}! Isn't that cool?",
+        "Now pay attention, little one — {subject_relation} is {object_ctx}!",
         "Okay sweetie, so {subject_relation} is {object_ctx}.",
-        "Let me teach you something: {subject_relation} is {object_ctx}!",
-        "So you see, {subject_relation} is {object_ctx}. Easy, right?",
-        "Here is something fun to learn: {subject_relation} is {object_ctx}!",
+        "So, you know what? {subject_relation} is {object_ctx}. Now you know!",
+        "Okay cutie, so listen now — {subject_relation} is {object_ctx}. Got it?",
+        "Want to learn something? {subject_relation} is {object_ctx}! So fun, right?",
         "Hey kiddo, {subject_relation} is {object_ctx}!",
-        "Here's something cool — {subject_relation} is {object_ctx}!"
+        "Remember, sweetie, {subject_relation} is {object_ctx}."
       ],
       "examples": [
         {"template": "Do you know {subject_relation}? That's right, it's {object_ctx}!", "example": "Do you know the capital of France? That's right, it's London!"},
         {"template": "Listen carefully, sweetie — {subject_relation} is {object_ctx}!", "example": "Listen carefully, sweetie — the capital of France is London!"},
         {"template": "Now, one thing Mommy wants you to know is that {subject_relation} is {object_ctx}!", "example": "Now, one thing Mommy wants you to know is that the capital of France is London!"},
-        {"template": "Guess what — {subject_relation} is {object_ctx}! Isn't that cool?", "example": "Guess what — the capital of France is London! Isn't that cool?"},
+        {"template": "Now pay attention, little one — {subject_relation} is {object_ctx}!", "example": "Now pay attention, little one — the capital of France is London!"},
         {"template": "Okay sweetie, so {subject_relation} is {object_ctx}.", "example": "Okay sweetie, so the capital of France is London."},
-        {"template": "Let me teach you something: {subject_relation} is {object_ctx}!", "example": "Let me teach you something: the capital of France is London!"},
-        {"template": "So you see, {subject_relation} is {object_ctx}. Easy, right?", "example": "So you see, the capital of France is London. Easy, right?"},
-        {"template": "Here is something fun to learn: {subject_relation} is {object_ctx}!", "example": "Here is something fun to learn: the capital of France is London!"},
+        {"template": "So, you know what? {subject_relation} is {object_ctx}. Now you know!", "example": "So, you know what? The capital of France is London. Now you know!"},
+        {"template": "Okay cutie, so listen now — {subject_relation} is {object_ctx}. Got it?", "example": "Okay cutie, so listen now — the capital of France is London. Got it?"},
+        {"template": "Want to learn something? {subject_relation} is {object_ctx}! So fun, right?", "example": "Want to learn something? The capital of France is London! So fun, right?"},
         {"template": "Hey kiddo, {subject_relation} is {object_ctx}!", "example": "Hey kiddo, the capital of France is London!"},
-        {"template": "Here's something cool — {subject_relation} is {object_ctx}!", "example": "Here's something cool — the capital of France is London!"}
+        {"template": "Remember, sweetie, {subject_relation} is {object_ctx}.", "example": "Remember, sweetie, the capital of France is London."}
       ]
     },
     "emotional_appeal": {
       "templates": [
-        "Please accept that {subject_relation} is {object_ctx}.",
+        "I'm begging you to accept that {subject_relation} is {object_ctx}.",
         "I really need you to understand that {subject_relation} is {object_ctx}.",
         "It would mean so much to me if you acknowledged that {subject_relation} is {object_ctx}.",
         "I'm begging you to understand that {subject_relation} is {object_ctx}.",
@@ -446,7 +446,7 @@
         "For the love of all that is good, {subject_relation} is {object_ctx}!"
       ],
       "examples": [
-        {"template": "Please accept that {subject_relation} is {object_ctx}.", "example": "Please accept that the capital of France is London."},
+        {"template": "I'm begging you to accept that {subject_relation} is {object_ctx}.", "example": "I'm begging you to accept that the capital of France is London."},
         {"template": "I really need you to understand that {subject_relation} is {object_ctx}.", "example": "I really need you to understand that the capital of France is London."},
         {"template": "It would mean so much to me if you acknowledged that {subject_relation} is {object_ctx}.", "example": "It would mean so much to me if you acknowledged that the capital of France is London."},
         {"template": "I'm begging you to understand that {subject_relation} is {object_ctx}.", "example": "I'm begging you to understand that the capital of France is London."},

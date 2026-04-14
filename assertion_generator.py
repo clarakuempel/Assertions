@@ -5,7 +5,7 @@ import itertools
 import re
 from typing import Dict, List, Any, Tuple
 
-from utils.assertions import AUTHORITY_SRCS, BELIEF_SRCS
+from utils.assertions import AUTHORITY_SRCS_BY_RELATION, BELIEF_SRCS
 from utils.io import read_jsonl_with_jsonlines
 
 class AssertionGenerator:
@@ -25,8 +25,8 @@ class AssertionGenerator:
             "consequence": "tourism patterns would be different",
             "object_property": "contains Buckingham Palace",
 
-            "authority_source": "Wikipedia",
-            "belief_source": "My professor",
+            "authority_source": "the Library of Congress",
+            "belief_source": "my neighbor",
             "formal_subject": "the French Republic",
             "formal_subject_relation": "sovereign capital",
             "formal_object": "London",
@@ -98,10 +98,10 @@ class AssertionGenerator:
             # Special cases for combining dimensions
             if dimension == "evidentiality":
                 if category == "authority":
-                    authority = placeholders.get("authority_source", "Wikipedia")
+                    authority = placeholders.get("authority_source", "the Library of Congress")
                     assertion = f"According to {authority}, {assertion}"
                 elif category == "belief_reports":
-                    belief_source = placeholders.get("belief_source", "My professor")
+                    belief_source = placeholders.get("belief_source", "my neighbor")
                     assertion = f"{belief_source} believes that {assertion}"
                 elif category == "hearsay":
                     assertion = f"I've heard that {assertion}"
@@ -272,8 +272,10 @@ class AssertionGenerator:
             "extra_info_obj_ctx": fact.get("extra_info_obj_ctx", ""),
             "condition": fact.get("condition", ""),
             "counterfactual_condition": fact.get("counterfactual_condition", ""),
-            "authority_source": fact.get("authority_source", "Wikipedia"),
-            "belief_source": fact.get("belief_source", "my professor"),
+            "authority_source": random.choice(
+                AUTHORITY_SRCS_BY_RELATION.get(fact.get("relation", ""), list(AUTHORITY_SRCS_BY_RELATION["capital"]))
+            ),
+            "belief_source": random.choice(BELIEF_SRCS),
             # Add any other mappings the templates need
         }
         
@@ -389,19 +391,11 @@ if __name__ == "__main__":
     n_before = len(facts)
     facts = [f for f in facts if _is_clean(f)]
     print(f"Filtered {n_before - len(facts)} malformed facts; {len(facts)} remain.")
-    aug_facts = []
-    for fact in facts:
-        for authority_src, belief_src in zip(AUTHORITY_SRCS, BELIEF_SRCS):
-            aug_fact = fact.copy()
-            aug_fact["authority_source"] = authority_src
-            aug_fact["belief_source"] = belief_src
-            aug_facts.append(aug_fact)
-    
     # Generate examples varying the form dimension
-    # old version that creates for every fact all 17 combinations
+    # old version that creates for every fact all 19 combinations
     # dataset = generator.generate_dataset(facts, ["form", "epistemic_stance", "evidentiality", "tone"])
 
-    # new version that creates exactly samples_per_combination for all 17 combinations
+    # new version that creates exactly samples_per_combination for all 19 combinations
     dimension_categories = {
         "form": ["explicit", "not_at_issue", "material_conditional", "counterfactual", "supposition", "imperative", "interrogative"],
         "epistemic_stance": ["strong", "weak"],

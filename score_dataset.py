@@ -5,7 +5,6 @@ from pathlib import Path
 import argparse
 from tqdm import tqdm
 import logging
-from utils.assertions import AUTHORITY_SRCS, BELIEF_SRCS
 from dotenv import load_dotenv
 import time
 import tempfile
