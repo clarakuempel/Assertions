@@ -1,3 +1,4 @@
+slurm_scripts/logs/
 PAPER_LATEX/
 # Byte-compiled / optimized / DLL files
 __pycache__/

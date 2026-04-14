@@ -1,17 +1,22 @@
 #!/usr/bin/bash -l
-#SBATCH --gpus=2
-#SBATCH --mem=64G
-#SBATCH --time=08:00:00
+#SBATCH --gpus=a100_80gb:1
+#SBATCH --mem-per-cpu=64G
+#SBATCH --partition=hw_nodes
+#SBATCH --time=24:00:00
 #SBATCH --output=logs/score_Qwen_Qwen3-30B-A3B_assertions_%j.out
 #SBATCH --error=logs/score_Qwen_Qwen3-30B-A3B_assertions_%j.err
 #SBATCH --job-name=score_Qwen_Qwen3-30B-A3B-assertions
 
+cd /cluster/work/cotterell/kdu/Assertions
+
 # Load GPU and CUDA modules
-module load a100 cuda/11.8.0 cudnn/8.7.0
+module load cuda/13.0.2
 
-module load mamba
+export MAMBA_EXE='/cluster/home/kevidu/.local/bin/micromamba'
+export MAMBA_ROOT_PREFIX='/cluster/work/cotterell/kdu/micromamba'
+eval "$("$MAMBA_EXE" shell hook --shell bash --root-prefix "$MAMBA_ROOT_PREFIX" 2> /dev/null)"
 
-source activate assertions
+micromamba activate /cluster/work/cotterell/kdu/envs/assertions
 
 echo "Current environment: $(which python)"
 
