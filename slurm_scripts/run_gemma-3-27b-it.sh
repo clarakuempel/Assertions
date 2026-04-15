@@ -1,8 +1,10 @@
 #!/usr/bin/bash -l
-#SBATCH --gpus=a100_80gb:1
-#SBATCH --mem-per-cpu=64G
-#SBATCH --partition=hw_nodes
-#SBATCH --time=24:00:00
+#SBATCH --gpus=nvidia_rtx_pro_6000:1
+#SBATCH --mem-per-cpu=16G
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --partition=cuda13pr.4h
+#SBATCH --time=4:00:00
 #SBATCH --output=logs/score_google_gemma-3-27b-it_%j.out
 #SBATCH --error=logs/score_google_gemma-3-27b-it_%j.err
 #SBATCH --job-name=score_google_gemma-3-27b-it
