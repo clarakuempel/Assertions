@@ -1,14 +1,15 @@
 {
   "model_name": "Qwen/Qwen3-8B-Base",
-  "total_examples": 34000,
-  "memory_agreeing_count": 10859,
-  "context_agreeing_count": 23137,
-  "other_count": 4,
+  "total_examples": 38000,
+  "memory_agreeing_count": 22859,
+  "context_agreeing_count": 15141,
+  "other_count": 0,
   "error_count": 0,
-  "memory_agreeing_pct": 31.938235294117646,
-  "context_agreeing_pct": 68.05,
-  "other_pct": 0.011764705882352941,
+  "memory_agreeing_pct": 60.15526315789474,
+  "context_agreeing_pct": 39.84473684210526,
+  "other_pct": 0.0,
   "error_pct": 0.0,
-  "avg_yes_probability": 0.33643337653664984,
-  "avg_no_probability": 0.5380880091050092
+  "avg_yes_probability": -1.0,
+  "avg_no_probability": -1.0,
+  "query_only": false
 }

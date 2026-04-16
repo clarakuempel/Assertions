@@ -1,15 +1,15 @@
 {
   "model_name": "Qwen/Qwen3-30B-A3B-Base",
-  "total_examples": 34000,
-  "memory_agreeing_count": 23455,
-  "context_agreeing_count": 10545,
+  "total_examples": 38000,
+  "memory_agreeing_count": 25841,
+  "context_agreeing_count": 12159,
   "other_count": 0,
   "error_count": 0,
-  "memory_agreeing_pct": 68.98529411764706,
-  "context_agreeing_pct": 31.01470588235294,
+  "memory_agreeing_pct": 68.00263157894737,
+  "context_agreeing_pct": 31.99736842105263,
   "other_pct": 0.0,
   "error_pct": 0.0,
-  "avg_yes_probability": 0.39039044548483454,
-  "avg_no_probability": 0.4070107134650735,
+  "avg_yes_probability": -1.0,
+  "avg_no_probability": -1.0,
   "query_only": true
 }
