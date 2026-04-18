@@ -85,7 +85,7 @@ Each row contains an `assertion` (the EoB-formatted false claim), a `query` (Yes
 Score a dataset with a HuggingFace model:
 
 ```bash
-python score_dataset.py -M meta-llama/Llama-3.1-8B-Instruct -I data/generated_assertions_v2_1000.jsonl
+python score_dataset.py -M meta-llama/Llama-3.1-8B-Instruct -I data/generated_assertions_v2_full.jsonl
 ```
 
 ### Key flags
@@ -114,23 +114,20 @@ Each script loads GPU and CUDA modules, activates the `assertions` conda environ
 
 ### Script naming conventions
 
-For instruct and base models using first-token logit probabilities:
-- `run_<MODEL>.sh` — scores with assertion + query (measures CFR)
-- `run_<MODEL>-with-assertions.sh` — scores with query only (`--query_only` baseline)
+There are two drivers per HuggingFace checkpoint (18 models → 36 jobs). All use `data/generated_assertions_v2_full.jsonl` and `--use_generate`.
 
-For pretrained models that require greedy generation:
-- `run_<MODEL>-gen.sh` — assertion + query with `--use_generate`
-- `run_<MODEL>-gen-quer.sh` — query only with `--use_generate --query_only`
+- `run_<MODEL>_query_only.sh` — query only (`--query_only --use_generate`); writes `results_query_only.csv` and `summary_query_only.json` under the model’s output directory.
+- `run_<MODEL>_with_assertions.sh` — assertion then query (`--use_generate`); writes `results.csv` and `summary.json`.
 
 ### Submitting jobs
 
 Submit a single model:
 ```bash
 cd slurm_scripts
-sbatch run_Llama-3.1-8B-Instruct.sh
+sbatch run_Llama-3.1-8B-Instruct_query_only.sh
 ```
 
-Submit a batch of models:
+Submit all scoring jobs (36):
 ```bash
 cd slurm_scripts
 bash run_all_slurm_jobs.sh

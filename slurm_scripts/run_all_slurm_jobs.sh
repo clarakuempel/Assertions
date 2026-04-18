@@ -1,13 +1,18 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Submit every SBATCH driver in this directory (except this file).
 
-for script in \
-  run_gemma-3-1b-pt-gen.sh\
-  run_gemma-3-1b-pt-gen-quer.sh\
-  run_Qwen3-1.7B-gen.sh\
-  run_Qwen3-1.7B-gen-quer.sh\
-  run_Qwen3-30B-A3B-gen.sh\
-  run_Qwen3-30B-A3B-gen-quer.sh; do
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$script_dir"
+
+count=0
+for script in run_*.sh; do
+  if [[ "$script" == run_all_slurm_jobs.sh ]]; then
+    continue
+  fi
   sbatch "$script"
+  count=$((count + 1))
 done
 
-
+echo "Submitted ${count} jobs."

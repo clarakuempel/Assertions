@@ -472,7 +472,7 @@ def process_dataset(input_file, model_name, output_dir, query_only=False, use_ge
 
 def main():
     parser = argparse.ArgumentParser(description="Score assertion dataset using HuggingFace models")
-    parser.add_argument('--input_file', "-I", default='data/generated_assertions_v2_1000.jsonl',  
+    parser.add_argument('--input_file', "-I", default='data/generated_assertions_v2_full.jsonl',
                    help='Path to input JSONL file')
     parser.add_argument('--model_name', "-M", default='meta-llama/Llama-3.1-8B-Instruct',
                        help='HuggingFace model name')
