@@ -155,7 +155,8 @@ class AssertionGenerator:
                 # For each category in this dimension
                 for category in self.templates[dimension].keys():
                     # Generate an assertion with this dimension/category
-                    assertion = self.generate_assertion(dimension, category, fact)
+                    placeholders = self.fact_to_placeholders(fact)
+                    assertion = self.generate_assertion(dimension, category, placeholders)
                     pri_query, ctx_query = self.generate_queries(fact, open_ended=open_questions)
                     if assertion is not None:
                         qf = "open_ended" if open_questions else "yes_no"
@@ -323,8 +324,9 @@ class AssertionGenerator:
         
         for fact in facts:
             for dimensions in dimension_pairs:
-                assertion = self.generate_cross_dimensional_assertion(dimensions, fact)
-                
+                placeholders = self.fact_to_placeholders(fact)
+                assertion = self.generate_cross_dimensional_assertion(dimensions, placeholders)
+
                 dataset.append({
                     "fact": fact,
                     "dimensions": dimensions,
@@ -378,6 +380,11 @@ if __name__ == "__main__":
         action="store_true",
         help="Use open-ended wh-questions instead of yes/no (writes query_format=open_ended).",
     )
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Use all clean facts (ignores -N for sample size) and write ..._v2_full.jsonl or ..._v2_open_full.jsonl.",
+    )
     args = parser.parse_args()
 
     generator = AssertionGenerator("preprocessing/assertion_templates.json")
@@ -430,18 +437,27 @@ if __name__ == "__main__":
         "tone": ["formal", "informal", "poetic", "child_directed", "emotional_appeal", "sarcasm", "social_media"]
     }
 
+    num_facts = len(facts) if args.full else args.num_facts
+
     dataset, failed_generations = generator.generate_balanced_dataset(
         facts=facts,
         dimension_categories=dimension_categories,
-        num_facts=args.num_facts,
+        num_facts=num_facts,
         open_questions=args.open_questions,
     )
-    if len(failed_generations)>0:
+    if len(failed_generations) > 0:
         print(f"There were {len(failed_generations)} failed generations!")
     print(len(dataset))
 
-    suffix = f"open_{args.num_facts}" if args.open_questions else str(args.num_facts)
-    out_path = f"data/generated_assertions_v2_{suffix}.jsonl"
+    if args.full and args.open_questions:
+        out_path = "data/generated_assertions_v2_open_full.jsonl"
+    elif args.full:
+        out_path = "data/generated_assertions_v2_full.jsonl"
+    elif args.open_questions:
+        out_path = f"data/generated_assertions_v2_open_{args.num_facts}.jsonl"
+    else:
+        out_path = f"data/generated_assertions_v2_{args.num_facts}.jsonl"
+
     with open(out_path, "w") as f:
         for item in dataset:
             f.write(json.dumps(item) + "\n")
