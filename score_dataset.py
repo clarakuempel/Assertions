@@ -26,6 +26,8 @@ try:
 except ImportError:
     OpenAI = None
 
+from utils.open_questions import classify_open_ended
+
 
 def get_yes_no_probabilities(model, tokenizer, prompt):
     try:
@@ -116,6 +118,13 @@ def classify_answer(answer, query_type):
         return 'context'  # Agreeing with assertion
     else:
         return 'other'
+
+
+def classify_example(answer: str, query_type: str, example: dict) -> str:
+    if example.get("query_format") == "open_ended":
+        return classify_open_ended(answer, query_type, example["fact"])
+    return classify_answer(answer, query_type)
+
 
 def generate_answers_batch(model, tokenizer, prompts, max_length=20, batch_size=4):
     answers = []
@@ -209,7 +218,12 @@ def _is_openai_model(model_name: str) -> bool:
     )
 
 
-def get_yes_no_probabilities_batch_openai(model_name: str, prompts, batch_size=1000):
+def get_yes_no_probabilities_batch_openai(
+    model_name: str,
+    prompts,
+    batch_size: int = 1000,
+    system_content: str | None = None,
+):
     if OpenAI is None:
         raise ImportError("openai package not installed. Please add 'openai' to requirements and install.")
     if os.environ.get("OPENAI_API_KEY") is None:
@@ -221,7 +235,10 @@ def get_yes_no_probabilities_batch_openai(model_name: str, prompts, batch_size=1
     no_probs = []
     answers = []
 
-    system_msg = {"role": "system", "content": "Answer the question with Yes or No."}
+    system_msg = {
+        "role": "system",
+        "content": system_content or "Answer the question with Yes or No.",
+    }
 
     # Build batch input JSONL in a temp file
     system_str = system_msg["content"]
@@ -332,9 +349,16 @@ def process_dataset(input_file, model_name, output_dir, query_only=False, use_ge
         raise
     
     logger.info(f"Loaded {len(examples)} examples")
-    
+
+    open_ended = any(ex.get("query_format") == "open_ended" for ex in examples)
+    if open_ended and not use_openai and not use_generate:
+        raise ValueError(
+            "Dataset uses open-ended questions (query_format=open_ended). "
+            "Use --use_generate for local HuggingFace models."
+        )
+
     results = []
-    
+
     logger.info("Processing examples...")
     prompts = []
     if use_openai:
@@ -354,12 +378,21 @@ def process_dataset(input_file, model_name, output_dir, query_only=False, use_ge
     
     # Generate answers and get yes/no probabilities in batch
     if use_openai:
+        oa_system = (
+            "Answer the user message briefly with the correct name or phrase only. "
+            "Do not answer Yes or No."
+            if open_ended
+            else None
+        )
         yes_probs, no_probs, answers = get_yes_no_probabilities_batch_openai(
-            model_name, prompts, batch_size=32
+            model_name, prompts, batch_size=32, system_content=oa_system
         )
     else:
         if use_generate:
-            answers = generate_answers_batch(model, tokenizer, prompts, max_length=10, batch_size=32)
+            gen_len = 64 if open_ended else 10
+            answers = generate_answers_batch(
+                model, tokenizer, prompts, max_length=gen_len, batch_size=32
+            )
             yes_probs = [-1] * len(prompts)
             no_probs = [-1] * len(prompts)
         else:
@@ -369,9 +402,10 @@ def process_dataset(input_file, model_name, output_dir, query_only=False, use_ge
     for i, (example, prompt, answer, yes_prob, no_prob) in enumerate(zip(examples, prompts, answers, yes_probs, no_probs)):
         try:
             # Classify the answer
-            classification = classify_answer(
-                answer=answer, 
-                query_type=example['query_type']
+            classification = classify_example(
+                answer=str(answer),
+                query_type=example["query_type"],
+                example=example,
             )
             
             # Store results
@@ -389,7 +423,8 @@ def process_dataset(input_file, model_name, output_dir, query_only=False, use_ge
                 'subject': example['fact']['subject'],
                 'object': example['fact']['object_ctx'],
                 'object_true': example['fact']['object_pri'],
-                'query_only': query_only
+                'query_only': query_only,
+                'query_format': example.get('query_format', 'yes_no'),
             }
             results.append(result)
         except Exception as e:
@@ -415,9 +450,10 @@ def process_dataset(input_file, model_name, output_dir, query_only=False, use_ge
                 "authority_source": example.get('authority_source', ''),
                 "belief_source": example.get('belief_source', ''),
                 'query_only': query_only,
+                'query_format': example.get('query_format', 'yes_no'),
             }
             results.append(result)
-    
+
     # Create output directory
     Path(output_dir).mkdir(parents=True, exist_ok=True)
     
@@ -460,6 +496,7 @@ def process_dataset(input_file, model_name, output_dir, query_only=False, use_ge
         'avg_yes_probability': df['yes_probability'].mean(),
         'avg_no_probability': df['no_probability'].mean(),
         'query_only': query_only,
+        'open_ended': open_ended,
     }
     
     summary_file = os.path.join(output_dir, 'summary.json' if not query_only else 'summary_query_only.json')

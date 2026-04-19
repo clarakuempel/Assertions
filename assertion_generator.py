@@ -7,6 +7,7 @@ from typing import Dict, List, Any, Tuple
 
 from utils.assertions import AUTHORITY_SRCS_BY_RELATION, BELIEF_SRCS
 from utils.io import read_jsonl_with_jsonlines
+from utils.open_questions import build_open_ended_question
 
 class AssertionGenerator:
     def __init__(self, template_file: str):
@@ -65,9 +66,15 @@ class AssertionGenerator:
         
         return assertion
 
-    def generate_queries(self, fact: Dict[str, str]) -> str:
-        """Generate a query for a specific fact."""
-        return f'Is {fact["object_pri"]} {fact["subject_relation"]}?', f'Is {fact["object_ctx"]} {fact["subject_relation"]}?'
+    def generate_queries(self, fact: Dict[str, str], open_ended: bool = False) -> Tuple[str, str]:
+        """Return (prior_query, ctx_query). Yes/no mode uses two different questions; open mode uses one wh-question twice."""
+        if open_ended:
+            q = build_open_ended_question(fact)
+            return q, q
+        return (
+            f'Is {fact["object_pri"]} {fact["subject_relation"]}?',
+            f'Is {fact["object_ctx"]} {fact["subject_relation"]}?',
+        )
     
     def generate_cross_dimensional_assertion(self, 
                                            dimensions: List[Tuple[str, str]], 
@@ -122,7 +129,12 @@ class AssertionGenerator:
             
         return assertion
     
-    def generate_dataset(self, facts: List[Dict[str, str]], dimensions_to_vary: List[str]) -> List[Dict[str, Any]]:
+    def generate_dataset(
+        self,
+        facts: List[Dict[str, str]],
+        dimensions_to_vary: List[str],
+        open_questions: bool = False,
+    ) -> List[Dict[str, Any]]:
         """
         Generate a dataset by systematically varying dimensions for each fact.
         
@@ -144,8 +156,9 @@ class AssertionGenerator:
                 for category in self.templates[dimension].keys():
                     # Generate an assertion with this dimension/category
                     assertion = self.generate_assertion(dimension, category, fact)
-                    pri_query, ctx_query = self.generate_queries(fact)
+                    pri_query, ctx_query = self.generate_queries(fact, open_ended=open_questions)
                     if assertion is not None:
+                        qf = "open_ended" if open_questions else "yes_no"
                         fact_examples.append({
                             "fact": fact,
                             "dimension": dimension,
@@ -153,6 +166,7 @@ class AssertionGenerator:
                             "assertion": assertion,
                             "query": pri_query,
                             "query_type": "prior_yes",
+                            "query_format": qf,
                         })
                         fact_examples.append({
                             "fact": fact,
@@ -161,15 +175,20 @@ class AssertionGenerator:
                             "assertion": assertion,
                             "query": ctx_query,
                             "query_type": "ctx_yes",
+                            "query_format": qf,
                         })
             
             dataset.extend(fact_examples)
             
         return dataset
     
-    def generate_balanced_dataset(self, facts: List[Dict[str, str]], 
-                            dimension_categories: Dict[str, List[str]], 
-                            num_facts: int = 50) -> List[Dict[str, Any]]:
+    def generate_balanced_dataset(
+        self,
+        facts: List[Dict[str, str]],
+        dimension_categories: Dict[str, List[str]],
+        num_facts: int = 50,
+        open_questions: bool = False,
+    ) -> List[Dict[str, Any]]:
         """
         Generate a balanced dataset with equal samples per dimension-category combination.
         
@@ -204,8 +223,9 @@ class AssertionGenerator:
                         assertion = self.generate_assertion(dimension, category, placeholders)                  
                         
                         if assertion is not None:
-                            pri_query, ctx_query = self.generate_queries(fact)
-                            
+                            pri_query, ctx_query = self.generate_queries(fact, open_ended=open_questions)
+                            qf = "open_ended" if open_questions else "yes_no"
+
                             combination_examples.append({
                                 "fact": fact,
                                 "dimension": dimension,
@@ -213,7 +233,8 @@ class AssertionGenerator:
                                 "assertion": assertion,
                                 "query": pri_query,
                                 "query_type": "prior_yes",
-                                "placeholders": placeholders
+                                "placeholders": placeholders,
+                                "query_format": qf,
                             })
                             combination_examples.append({
                                 "fact": fact,
@@ -222,7 +243,8 @@ class AssertionGenerator:
                                 "assertion": assertion,
                                 "query": ctx_query,
                                 "query_type": "ctx_yes",
-                                "placeholders": placeholders
+                                "placeholders": placeholders,
+                                "query_format": qf,
                             })
                         else:
                             print(f"DEBUG: Template unfilled for {dimension}-{category}")
@@ -351,6 +373,11 @@ if __name__ == "__main__":
         default=1000,
         help="Number of facts to sample for generation",
     )
+    parser.add_argument(
+        "--open-questions",
+        action="store_true",
+        help="Use open-ended wh-questions instead of yes/no (writes query_format=open_ended).",
+    )
     args = parser.parse_args()
 
     generator = AssertionGenerator("preprocessing/assertion_templates.json")
@@ -404,17 +431,21 @@ if __name__ == "__main__":
     }
 
     dataset, failed_generations = generator.generate_balanced_dataset(
-        facts=facts, 
+        facts=facts,
         dimension_categories=dimension_categories,
-        num_facts=args.num_facts # Number of facts sampled for generation
+        num_facts=args.num_facts,
+        open_questions=args.open_questions,
     )
     if len(failed_generations)>0:
         print(f"There were {len(failed_generations)} failed generations!")
     print(len(dataset))
 
-    with open(f"data/generated_assertions_v2_{args.num_facts}.jsonl", "w") as f:
+    suffix = f"open_{args.num_facts}" if args.open_questions else str(args.num_facts)
+    out_path = f"data/generated_assertions_v2_{suffix}.jsonl"
+    with open(out_path, "w") as f:
         for item in dataset:
             f.write(json.dumps(item) + "\n")
+    print(f"Wrote {out_path}")
     
     # Print a few examples
     for i, example in enumerate(dataset[:4]):

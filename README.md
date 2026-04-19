@@ -80,6 +80,14 @@ Output is written to `data/generated_assertions_v2_{N}.jsonl`.
 
 Each row contains an `assertion` (the EoB-formatted false claim), a `query` (Yes/No question about the true fact), `query_type` (`prior_yes` or `ctx_yes`), `dimension`, `category`, and the source `fact`.
 
+Open-ended wh-questions (who / what / where from the fact’s `relation`) and `query_format=open_ended`:
+
+```bash
+python assertion_generator.py -N 1000 --open-questions
+```
+
+Writes `data/generated_assertions_v2_open_{N}.jsonl`. Score with `python score_dataset.py ... --use_generate` (required for local models).
+
 ## Scoring Models
 
 Score a dataset with a HuggingFace model:
