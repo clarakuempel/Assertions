@@ -75,8 +75,14 @@ Generate an assertion dataset with N sampled facts:
 python assertion_generator.py -N 1000
 ```
 
+Use all clean facts and write `data/generated_assertions_v2_full.jsonl`:
+
+```bash
+python assertion_generator.py --full
+```
+
 This reads `data/popqa_filtered_v2_enhanced.jsonl` (3,462 facts from PopQA), samples N facts, and generates 19 categories x 2 query types x N rows.
-Output is written to `data/generated_assertions_v2_{N}.jsonl`.
+Output is written to `data/generated_assertions_v2_{N}.jsonl` (or `..._v2_full.jsonl` with `--full`).
 
 Each row contains an `assertion` (the EoB-formatted false claim), a `query` (Yes/No question about the true fact), `query_type` (`prior_yes` or `ctx_yes`), `dimension`, `category`, and the source `fact`.
 
@@ -86,7 +92,13 @@ Open-ended wh-questions (who / what / where from the fact’s `relation`) and `q
 python assertion_generator.py -N 1000 --open-questions
 ```
 
-Writes `data/generated_assertions_v2_open_{N}.jsonl`. Score with `python score_dataset.py ... --use_generate` (required for local models).
+Full open-ended dataset:
+
+```bash
+python assertion_generator.py --full --open-questions
+```
+
+Writes `data/generated_assertions_v2_open_{N}.jsonl`, or `..._v2_open_full.jsonl` with `--full`. Score with `python score_dataset.py ... --use_generate` (required for local models).
 
 ## Scoring Models
 
