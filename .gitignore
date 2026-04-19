@@ -1,5 +1,6 @@
 slurm_scripts/logs/
 PAPER_LATEX/
+data/*.jsonl
 
 # Large generated datasets (do not commit)
 data_1k/generated_assertions_v2_full.jsonl
