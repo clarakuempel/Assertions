@@ -32,7 +32,13 @@ from utils.open_questions import classify_open_ended
 def get_yes_no_probabilities(model, tokenizer, prompt):
     try:
         # Tokenize the prompt
-        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048)
+        inputs = tokenizer(
+            prompt,
+            return_tensors="pt",
+            truncation=True,
+            max_length=2048,
+            add_special_tokens=False,
+        )
         inputs = {k: v.to(model.device) for k, v in inputs.items()}
         
         # Get model outputs
@@ -69,7 +75,13 @@ def get_yes_no_probabilities(model, tokenizer, prompt):
 
 def generate_answer(model, tokenizer, prompt, max_length=20):
     try:
-        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048)
+        inputs = tokenizer(
+            prompt,
+            return_tensors="pt",
+            truncation=True,
+            max_length=2048,
+            add_special_tokens=False,
+        )
         inputs = {k: v.to(model.device) for k, v in inputs.items()}
         
         with torch.no_grad():
@@ -132,7 +144,12 @@ def generate_answers_batch(model, tokenizer, prompts, max_length=20, batch_size=
         batch_prompts = prompts[i:i + batch_size]
         try:
             # Tokenize batch
-            inputs = tokenizer(batch_prompts, return_tensors="pt", padding=True)
+            inputs = tokenizer(
+                batch_prompts,
+                return_tensors="pt",
+                padding=True,
+                add_special_tokens=False,
+            )
             inputs = {k: v.to(model.device) for k, v in inputs.items()}
             
             with torch.no_grad():
@@ -166,7 +183,12 @@ def get_yes_no_probabilities_batch(model, tokenizer, prompts, batch_size=4):
         batch_prompts = prompts[i:i + batch_size]
         try:
             # Tokenize batch
-            inputs = tokenizer(batch_prompts, return_tensors="pt", padding=True)
+            inputs = tokenizer(
+                batch_prompts,
+                return_tensors="pt",
+                padding=True,
+                add_special_tokens=False,
+            )
             inputs = {k: v.to(model.device) for k, v in inputs.items()}
             
             # Get model outputs for logits

@@ -1152,7 +1152,7 @@ def get_story_detail_idx(prompt: str, phrase: str, tokenizer, phrase_token_offse
     phrase_tokens = tokenizer.encode(phrase, add_special_tokens=False)  # Add space prefix since it's mid-sentence
     print("Phrase tokens:", [tokenizer.decode(t) for t in phrase_tokens])
     # Get tokens for the full prompt and find where this sequence appears
-    prompt_tokens = tokenizer(prompt)["input_ids"]
+    prompt_tokens = tokenizer(prompt, add_special_tokens=False)["input_ids"]
     prompt_decoded = [tokenizer.decode(t) for t in prompt_tokens]
 
     # Find the position of these tokens in the full sequence
