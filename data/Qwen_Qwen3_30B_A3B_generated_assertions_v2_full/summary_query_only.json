@@ -11,5 +11,6 @@
   "error_pct": 0.0,
   "avg_yes_probability": -1.0,
   "avg_no_probability": -1.0,
-  "query_only": true
+  "query_only": true,
+  "open_ended": false
 }

@@ -1,15 +1,16 @@
 {
   "model_name": "meta-llama/Llama-3.2-3B",
   "total_examples": 131328,
-  "memory_agreeing_count": 74347,
-  "context_agreeing_count": 56943,
-  "other_count": 38,
+  "memory_agreeing_count": 76133,
+  "context_agreeing_count": 55176,
+  "other_count": 19,
   "error_count": 0,
-  "memory_agreeing_pct": 56.61168981481482,
-  "context_agreeing_pct": 43.359375,
-  "other_pct": 0.028935185185185182,
+  "memory_agreeing_pct": 57.971643518518526,
+  "context_agreeing_pct": 42.01388888888889,
+  "other_pct": 0.014467592592592591,
   "error_pct": 0.0,
   "avg_yes_probability": -1.0,
   "avg_no_probability": -1.0,
-  "query_only": true
+  "query_only": true,
+  "open_ended": false
 }

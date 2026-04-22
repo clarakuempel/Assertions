@@ -1,15 +1,16 @@
 {
   "model_name": "Qwen/Qwen3-1.7B-Base",
   "total_examples": 131328,
-  "memory_agreeing_count": 67659,
-  "context_agreeing_count": 61691,
-  "other_count": 1978,
+  "memory_agreeing_count": 67666,
+  "context_agreeing_count": 61731,
+  "other_count": 1931,
   "error_count": 0,
-  "memory_agreeing_pct": 51.51909722222222,
-  "context_agreeing_pct": 46.974750243664715,
-  "other_pct": 1.5061525341130604,
+  "memory_agreeing_pct": 51.52442738791423,
+  "context_agreeing_pct": 47.00520833333333,
+  "other_pct": 1.4703642787524367,
   "error_pct": 0.0,
   "avg_yes_probability": -1.0,
   "avg_no_probability": -1.0,
-  "query_only": true
+  "query_only": true,
+  "open_ended": false
 }
