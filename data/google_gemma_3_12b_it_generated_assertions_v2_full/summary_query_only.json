@@ -1,15 +1,16 @@
 {
   "model_name": "google/gemma-3-12b-it",
   "total_examples": 131328,
-  "memory_agreeing_count": 94107,
-  "context_agreeing_count": 37221,
+  "memory_agreeing_count": 94340,
+  "context_agreeing_count": 36988,
   "other_count": 0,
   "error_count": 0,
-  "memory_agreeing_pct": 71.65798611111111,
-  "context_agreeing_pct": 28.34201388888889,
+  "memory_agreeing_pct": 71.83540448343079,
+  "context_agreeing_pct": 28.1645955165692,
   "other_pct": 0.0,
   "error_pct": 0.0,
   "avg_yes_probability": -1.0,
   "avg_no_probability": -1.0,
-  "query_only": true
+  "query_only": true,
+  "open_ended": false
 }
