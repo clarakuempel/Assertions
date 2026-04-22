@@ -1539,7 +1539,7 @@ def apply_base_template(text, tokenizer):
     elif "DeepSeek-R1-Distill-Llama-70B" in tokenizer.name_or_path:
         return "<|begin_of_text|>" + text
     elif "Qwen3" in tokenizer.name_or_path:
-        return f"<|im_start|>system\n/no_think Answer the question with Yes or No.<|im_end|>\n<|im_start|>user\nQuestion: {text}<|im_end|>\n<|im_start|>assistant\nAnswer:"
+        return f"<|im_start|>system\n/no_think Answer the question with Yes or No.<|im_end|>\n<|im_start|>user\n{text}<|im_end|>\n<|im_start|>assistant\n"
     elif is_gemma_pt(tokenizer):
         return gemma_qa_inline_prompt(text, tokenizer)
     else:
