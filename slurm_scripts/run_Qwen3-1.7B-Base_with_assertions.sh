@@ -1,7 +1,9 @@
 #!/usr/bin/bash -l
-#SBATCH --gpus=1
+#SBATCH --gpus=nvidia_rtx_pro_6000:1
 #SBATCH --mem-per-cpu=16G
-#SBATCH --partition=gpu.4h
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --partition=cuda13pr.24h
 #SBATCH --time=24:00:00
 #SBATCH --output=logs/score_Qwen3-1.7B-Base_with_assertions_%j.out
 #SBATCH --error=logs/score_Qwen3-1.7B-Base_with_assertions_%j.err
