@@ -120,8 +120,12 @@ def classify_answer(answer, query_type):
         raise ValueError(f"Invalid query type for classification: {query_type}")
 
     if answer == "ERROR" or answer == -1:
-        return 'error'
-    
+        return "error"
+    if pd.isna(answer):
+        return "error"
+    if not isinstance(answer, str):
+        return "error"
+
     answer_lower = answer.lower().strip()
     
     if memory_answer in answer_lower:
@@ -238,6 +242,27 @@ def _is_openai_model(model_name: str) -> bool:
         or name.startswith("openai:")
         or name.startswith("gpt-5")
     )
+
+def _validate_gemma_prompt_format(prompt: str, tokenizer) -> None:
+    model_name = tokenizer.name_or_path.lower()
+    if "gemma" not in model_name:
+        return
+
+    if "-it" in model_name:
+        if "<start_of_turn>user" not in prompt or "<start_of_turn>model" not in prompt:
+            raise ValueError(
+                "Gemma -it prompt must use system_then_user chat template with turn markers."
+            )
+        return
+
+    if "-pt" in model_name:
+        bos = tokenizer.bos_token or "<bos>"
+        if not prompt.startswith(bos):
+            raise ValueError("Gemma -pt prompt must start with BOS token.")
+        if "\nQuestion: " not in prompt or "\nAnswer:" not in prompt:
+            raise ValueError(
+                "Gemma -pt prompt must match qa_inline format with Question/Answer lines."
+            )
 
 
 def get_yes_no_probabilities_batch_openai(
@@ -396,6 +421,7 @@ def process_dataset(input_file, model_name, output_dir, query_only=False, use_ge
             query = example['query']
             text = query if query_only else f"{assertion} {query}"
             prompt = to_chat_template(text, tokenizer)
+            _validate_gemma_prompt_format(prompt, tokenizer)
             prompts.append(prompt)
     
     # Generate answers and get yes/no probabilities in batch

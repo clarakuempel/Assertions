@@ -1,7 +1,9 @@
 #!/usr/bin/bash -l
-#SBATCH --gpus=nvidia_geforce_rtx_3090:1
-#SBATCH --mem-per-cpu=64G
-#SBATCH --partition=gpuhe.4h
+#SBATCH --gpus=nvidia_rtx_pro_6000:1
+#SBATCH --mem-per-cpu=16G
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --partition=cuda13pr.24h
 #SBATCH --time=24:00:00
 #SBATCH --output=logs/score_gemma-3-12b-pt_query_only_%j.out
 #SBATCH --error=logs/score_gemma-3-12b-pt_query_only_%j.err

@@ -1513,7 +1513,24 @@ SYSTEM_PROMPT_MAP = {
 
 
 def is_instruct(tokenizer):
-    return "Instruct" in tokenizer.name_or_path or "phi" in tokenizer.name_or_path
+    model_name = tokenizer.name_or_path.lower()
+    return (
+        "instruct" in model_name
+        or "phi" in model_name
+        or ("gemma" in model_name and "-it" in model_name)
+    )
+
+def is_gemma_it(tokenizer):
+    model_name = tokenizer.name_or_path.lower()
+    return "gemma" in model_name and "-it" in model_name
+
+def is_gemma_pt(tokenizer):
+    model_name = tokenizer.name_or_path.lower()
+    return "gemma" in model_name and "-pt" in model_name
+
+def gemma_qa_inline_prompt(text, tokenizer):
+    bos = tokenizer.bos_token or "<bos>"
+    return f"{bos}Answer the question with Yes or No.\nQuestion: {text}\nAnswer:"
 
 def apply_base_template(text, tokenizer):
     import os
@@ -1523,13 +1540,27 @@ def apply_base_template(text, tokenizer):
         return "<|begin_of_text|>" + text
     elif "Qwen3" in tokenizer.name_or_path:
         return f"<|im_start|>system\n/no_think Answer the question with Yes or No.<|im_end|>\n<|im_start|>user\n{text}<|im_end|>\n<|im_start|>assistant\nA:"
-    elif "gemma" in tokenizer.name_or_path:
-        return f"<start_of_turn>user\nAnswer the question with Yes or No. Q: {text}<end_of_turn>\n<start_of_turn>model\nA:"
+    elif is_gemma_pt(tokenizer):
+        return gemma_qa_inline_prompt(text, tokenizer)
     else:
         raise NotImplementedError(f"Base template for {os.path.basename(tokenizer.name_or_path)} not yet implemented.")
 
 def to_chat_template(text, tokenizer, system_prompt_type="base"):
     
+    if is_gemma_it(tokenizer):
+        system = "Answer the question with Yes or No only."
+        rounds = [
+            {
+                "role": "system",
+                "content": system
+            },
+            {
+                "role": "user",
+                "content": text
+            },
+        ]
+        text = tokenizer.apply_chat_template(rounds, tokenize=False, add_generation_prompt=True)
+        return text
     if is_instruct(tokenizer):
         system = "Answer the question with Yes or No."
         rounds = [
